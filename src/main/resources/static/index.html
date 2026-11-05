@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cyber Shield – Pause. Check. Stay safe.</title>
+  <meta name="description"
+        content="Cyber Shield is a free cybersecurity awareness tool. Paste any suspicious text or link and get an instant risk score without leaving the page." />
+  <meta name="robots" content="index, follow" />
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="Cyber Shield" />
+  <meta property="og:description" content="Pause. Check. Stay safe. Analyse suspicious text and links instantly." />
+  <meta property="og:type" content="website" />
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap"
+        rel="stylesheet" />
+
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+
+<body>
+
+  <a href="#check" class="skip-link">Skip to Scam Checker</a>
+
+  <!-- ═══════════════════════════════ HERO & NAV ═════════════════════════════ -->
+  <header class="hero" id="top">
+    <canvas id="vortex" aria-hidden="true"></canvas>
+    <div class="frame" aria-hidden="true"></div>
+
+    <nav class="nav" aria-label="Main">
+      <a class="logo" href="#top" aria-label="Cyber Shield home">
+        <svg width="26" height="28" viewBox="0 0 26 28" fill="none" aria-hidden="true">
+          <path d="M13 1.5 2.5 5.4v7.2c0 6.4 4.4 11.1 10.5 13.9 6.1-2.8 10.5-7.5 10.5-13.9V5.4L13 1.5Z" stroke="#fff" stroke-width="2" stroke-linejoin="round"/>
+          <path d="m8.5 13.6 3.2 3.2 5.8-6.2" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        CYBER SHIELD
+      </a>
+      <ul class="nav-links">
+        <li><a href="#about">About</a></li>
+        <li><a href="#features">Features</a></li>
+        <li><a href="#check">Check</a></li>
+        <li><a href="#learn">Learn</a></li>
+        <li><a href="#report">Report</a></li>
+      </ul>
+      <a class="pill cta nav-cta" href="#check">CHECK NOW <span aria-hidden="true">&raquo;</span></a>
+      <button id="nav-toggle" class="nav-toggle" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="nav-menu">
+        <span class="nav-toggle-icon" aria-hidden="true">
+          <span></span>
+          <span></span>
+          <span></span>
+        </span>
+      </button>
+    </nav>
+
+    <!-- Mobile Nav Menu Drawer (under 760px) -->
+    <div id="nav-menu" class="nav-menu" aria-hidden="true">
+      <ul class="nav-menu-list">
+        <li><a href="#about" class="nav-menu-link">About</a></li>
+        <li><a href="#features" class="nav-menu-link">Features</a></li>
+        <li><a href="#check" class="nav-menu-link">Check</a></li>
+        <li><a href="#learn" class="nav-menu-link">Learn</a></li>
+        <li><a href="#report" class="nav-menu-link">Report</a></li>
+      </ul>
+      <div class="nav-menu-footer">
+        <a class="pill cta mobile-cta" href="#check">CHECK NOW <span aria-hidden="true">&raquo;</span></a>
+      </div>
+    </div>
+
+    <div class="hero-body">
+      <h1 class="rise d1">The scam detection system<span class="l2">for every Indian phone</span></h1>
+      <p class="sub rise d2">Paste any suspicious message, link or call script.<br>Get a clear risk score and know exactly why, in seconds.</p>
+      <div class="actions rise d3">
+        <a class="pill" href="#check">Check a message <span aria-hidden="true">&raquo;</span></a>
+        <a class="pill pill-solid" href="#learn">Learn the scams</a>
+      </div>
+    </div>
+
+    <div class="strip" aria-label="Scams Cyber Shield detects">
+      <div class="track">
+        <span><i></i>PHISHING</span><span><i></i>DIGITAL ARREST</span><span><i></i>FAKE APK</span><span><i></i>UPI FRAUD</span><span><i></i>KYC SCAM</span><span><i></i>COURIER SCAM</span><span><i></i>OTP THEFT</span><span><i></i>LOTTERY BAIT</span>
+        <span><i></i>PHISHING</span><span><i></i>DIGITAL ARREST</span><span><i></i>FAKE APK</span><span><i></i>UPI FRAUD</span><span><i></i>KYC SCAM</span><span><i></i>COURIER SCAM</span><span><i></i>OTP THEFT</span><span><i></i>LOTTERY BAIT</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ═══════════════════════════════ ABOUT ═════════════════════════════════ -->
+  <section id="about" class="info-section about-section" aria-labelledby="about-statement-title">
+    <div class="container">
+      <div class="about-hero-card reveal-group">
+        <div class="reveal-item">
+          <span class="section-tag">Threat Landscape in India</span>
+          <h2 id="about-statement-title" class="about-statement">
+            As digital payments and smartphone adoption surged across India, cybercrime evolved from crude lottery SMS into coercive psychological extortion.
+          </h2>
+          <p class="about-statement-sub">
+            Fraudsters exploit urgency and fear by impersonating police officers in digital arrest video calls, circulating utility bills bundled with malicious Android APKs, and spoofing trusted banking domains. Cyber Shield gives citizens an instant, private checkpoint to pause and verify before taking action.
+          </p>
+        </div>
+
+        <!-- 3-Step Strip: Paste, Analyze, Act -->
+        <div class="steps-strip reveal-group">
+          <div class="step-card reveal-item">
+            <div class="step-num" aria-hidden="true">01</div>
+            <div class="step-content">
+              <h3 class="step-title">Paste</h3>
+              <p class="step-desc">Paste any suspicious SMS, WhatsApp message, unknown APK link, or video call script into the checker.</p>
+            </div>
+          </div>
+
+          <div class="step-card reveal-item">
+            <div class="step-num" aria-hidden="true">02</div>
+            <div class="step-content">
+              <h3 class="step-title">Analyze</h3>
+              <p class="step-desc">Our rule heuristics and local ML inspect keywords, urgency signals, and typosquatted domains in milliseconds.</p>
+            </div>
+          </div>
+
+          <div class="step-card reveal-item">
+            <div class="step-num" aria-hidden="true">03</div>
+            <div class="step-content">
+              <h3 class="step-title">Act</h3>
+              <p class="step-desc">Receive an instant risk score, highlighted triggers, and verified official guidance before you pay or install.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════ FEATURES ══════════════════════════════ -->
+  <section id="features" class="info-section features-section" aria-labelledby="features-title">
+    <div class="container">
+      <div class="section-header reveal-group">
+        <span class="section-tag reveal-item">Core Capabilities</span>
+        <h2 id="features-title" class="section-heading reveal-item">Engineered to Expose Deception</h2>
+        <p class="section-sub reveal-item">Built with a zero-connection safety guarantee: Cyber Shield never opens, fetches, or probes any analysed URL.</p>
+      </div>
+
+      <!-- Bento Grid of Glass Cards -->
+      <div class="bento-grid reveal-group">
+        <!-- 1. Deceptive URL detection -->
+        <div class="bento-card bento-wide reveal-item">
+          <div class="bento-icon-wrapper" aria-hidden="true">
+            <svg class="bento-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+              <line x1="2" y1="2" x2="22" y2="22" stroke="currentColor" stroke-width="1.5" opacity="0.6"/>
+            </svg>
+          </div>
+          <h3 class="bento-title">Deceptive URL detection</h3>
+          <p class="bento-line">Identifies typosquatted domains, punycode tricks, and suspicious TLDs targeting Indian services.</p>
+          <p class="bento-line">Zero connection guarantee—analyzes URL patterns in-memory without ever opening or pinging links.</p>
+        </div>
+
+        <!-- 2. Digital arrest playbook -->
+        <div class="bento-card reveal-item">
+          <div class="bento-icon-wrapper" aria-hidden="true">
+            <svg class="bento-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="4" width="14" height="16" rx="2"/>
+              <path d="m22 7-6 5 6 5V7z"/>
+              <circle cx="9" cy="11" r="2"/>
+              <path d="M5 17c0-2 2-3 4-3s4 1 4 3"/>
+            </svg>
+          </div>
+          <h3 class="bento-title">Digital arrest playbook</h3>
+          <p class="bento-line">Recognizes coercive scripts impersonating police, CBI, customs, and court officials over video calls.</p>
+          <p class="bento-line">Flags demands for isolation, fabricated narcotic parcels, and safe account transfer schemes.</p>
+        </div>
+
+        <!-- 3. Malicious app signals -->
+        <div class="bento-card reveal-item">
+          <div class="bento-icon-wrapper" aria-hidden="true">
+            <svg class="bento-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="5" y="2" width="14" height="20" rx="3"/>
+              <line x1="12" y1="18" x2="12.01" y2="18" stroke-width="2.5"/>
+              <path d="M9 8h6M9 12h6"/>
+              <path d="M12 5v.01"/>
+            </svg>
+          </div>
+          <h3 class="bento-title">Malicious app signals</h3>
+          <p class="bento-line">Catches deceptive electricity bill and KYC APK links designed for sideloading onto Android phones.</p>
+          <p class="bento-line">Warns against remote desktop utilities like AnyDesk and abusive accessibility permission requests.</p>
+        </div>
+
+        <!-- 4. Explainable score -->
+        <div class="bento-card reveal-item">
+          <div class="bento-icon-wrapper" aria-hidden="true">
+            <svg class="bento-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+              <circle cx="12" cy="12" r="3"/>
+            </svg>
+          </div>
+          <h3 class="bento-title">Explainable score</h3>
+          <p class="bento-line">Delivers an instant 0–100 threat rating with exact highlighted phrases explaining the assessment.</p>
+          <p class="bento-line">Eliminates black-box guesses with clear signals and specific immediate steps to take.</p>
+        </div>
+
+        <!-- 5. Hybrid rules + ML -->
+        <div class="bento-card reveal-item">
+          <div class="bento-icon-wrapper" aria-hidden="true">
+            <svg class="bento-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="4" y="4" width="16" height="16" rx="2"/>
+              <rect x="9" y="9" width="6" height="6"/>
+              <path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 14h3M1 9h3M1 14h3"/>
+            </svg>
+          </div>
+          <h3 class="bento-title">Hybrid rules + ML</h3>
+          <p class="bento-line">Combines curated rule heuristics with an on-device machine learning model.</p>
+          <p class="bento-line">Detects known attack templates while catching novel phrasing variations and social engineering.</p>
+        </div>
+
+        <!-- 6. Private by design -->
+        <div class="bento-card bento-wide reveal-item">
+          <div class="bento-icon-wrapper" aria-hidden="true">
+            <svg class="bento-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+              <path d="m9 12 2 2 4-4"/>
+            </svg>
+          </div>
+          <h3 class="bento-title">Private by design</h3>
+          <p class="bento-line">All message inspection runs in-memory on the local server without logging text or saving inputs.</p>
+          <p class="bento-line">No third-party trackers, no analytics beacons, and no external API data leaks.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════ MAIN CHECK TOOL ════════════════════════ -->
+  <main class="container main-content" id="check">
+
+    <div class="section-header reveal-group">
+      <span class="section-tag reveal-item">Real-Time Verification</span>
+      <h2 class="section-heading reveal-item">Scan Suspicious Communication</h2>
+      <p class="section-sub reveal-item">Inspect any incoming SMS, message, link, or video call script before you click, pay, or reply.</p>
+    </div>
+
+      <!-- Input card -->
+      <div class="card input-card">
+        <div class="input-header-row">
+          <label for="input-text" class="input-label">
+            Paste suspicious text or link
+          </label>
+        </div>
+
+        <!-- Sample buttons -->
+        <div class="samples-container" aria-label="Sample test messages">
+          <span class="samples-title" id="samples-heading">Try a sample:</span>
+          <div class="samples-row" role="group" aria-labelledby="samples-heading">
+            <button type="button" class="btn-sample chip" data-sample="kyc" aria-label="Load Bank KYC SMS sample" title="Simulates a fake bank KYC SMS with link">Bank KYC SMS</button>
+            <button type="button" class="btn-sample chip" data-sample="arrest" aria-label="Load Digital Arrest Call sample" title="Simulates a coercive digital arrest call script">Digital Arrest Call</button>
+            <button type="button" class="btn-sample chip" data-sample="courier" aria-label="Load Courier Link sample" title="Simulates an undelivered parcel fee scam">Courier Link</button>
+            <button type="button" class="btn-sample chip" data-sample="apk" aria-label="Load Malicious APK sample" title="Simulates a malicious utility APK install prompt">Malicious APK</button>
+            <button type="button" class="btn-sample chip" data-sample="safe" aria-label="Load Safe Message sample" title="Simulates a legitimate team communication">Safe Message</button>
+          </div>
+        </div>
+
+        <div class="textarea-wrapper">
+          <textarea
+            id="input-text"
+            class="input-textarea"
+            placeholder="e.g. &quot;Your KYC has expired! Click http://sbi-renew.xyz to update or your account will be blocked within 24 hours.&quot;"
+            rows="7"
+            maxlength="5000"
+            aria-describedby="char-count privacy-note"
+            spellcheck="false"
+          ></textarea>
+          <div class="textarea-overlay" aria-hidden="true">
+            <div class="scan-line"></div>
+          </div>
+        </div>
+
+        <div class="input-footer">
+          <span id="char-count" class="char-count" aria-live="polite">0 / 5000</span>
+        </div>
+
+        <!-- CTA buttons -->
+        <div class="btn-row">
+          <button id="btn-analyze" class="pill" type="button" aria-describedby="privacy-note">
+            <svg class="btn-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+              <path fill-rule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 1.414L10.586 9H7a1 1 0 100 2h3.586l-1.293 1.293a1 1 0 101.414 1.414l3-3a1 1 0 000-1.414z"
+                    clip-rule="evenodd"/>
+            </svg>
+            <span>Analyse</span>
+          </button>
+          <button id="btn-clear" class="pill" type="button">
+            <svg class="btn-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+              <path fill-rule="evenodd"
+                    d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                    clip-rule="evenodd"/>
+            </svg>
+            <span>Clear</span>
+          </button>
+          <label class="toggle-label ml-toggle-label" for="use-ml" title="Combine ML layer with rule engine">
+            <input type="checkbox" id="use-ml" class="toggle-checkbox" checked aria-describedby="ml-hint"/>
+            <span class="toggle-track" aria-hidden="true">
+              <span class="toggle-thumb"></span>
+            </span>
+            <span class="toggle-text">Use ML layer</span>
+          </label>
+          <span id="ml-hint" class="sr-only">Combines machine-learning statistical models with the rule engine.</span>
+        </div>
+
+        <!-- Privacy note -->
+        <p id="privacy-note" class="privacy-note" role="note">
+          <svg class="inline-icon" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+            <path d="M8 1a5.333 5.333 0 00-4 10.667V14l1.333-1.333L6.667 14V12.5A5.333 5.333 0 008 1zm0 1.333A4 4 0 0112 6.333a4 4 0 01-4 4 4 4 0 01-4-4 4 4 0 014-4zM7.333 4v3.333h1.334V4H7.333zm0 4v1.333h1.334V8H7.333z"/>
+          </svg>
+          Your text is analysed in-memory on this server and never stored.
+        </p>
+      </div>
+
+      <!-- Results area -->
+      <div id="results-area" aria-live="polite" aria-atomic="true">
+        <!-- Empty state (shown by default) -->
+        <div id="empty-state" class="empty-state" role="status">
+          <div class="empty-state-icon" aria-hidden="true">
+            <svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="40" cy="40" r="38" stroke="currentColor" stroke-width="2" stroke-dasharray="6 4" opacity="0.3"/>
+              <path d="M40 12L16 24v16c0 13.5 9.5 24 24 28 14.5-4 24-14.5 24-28V24L40 12Z"
+                    fill="currentColor" opacity="0.08"/>
+              <path d="M40 18L20 28v12c0 11 8 20 20 23 12-3 20-12 20-23V28L40 18Z"
+                    fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.25"/>
+              <circle cx="40" cy="40" r="6" fill="currentColor" opacity="0.15"/>
+              <path d="M37 40l2 2 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.4"/>
+            </svg>
+          </div>
+          <h2 class="empty-state-heading">Ready to scan</h2>
+          <p class="empty-state-text">
+            Paste any suspicious message, SMS, email, or link above and click <strong>Analyse</strong>.
+          </p>
+          <ul class="empty-state-tips" aria-label="What you can check">
+            <li>Phishing links &amp; fake login pages</li>
+            <li>SMS / WhatsApp scam messages</li>
+            <li>Suspicious job or lottery offers</li>
+            <li>Digital arrest &amp; impersonation threats</li>
+          </ul>
+        </div>
+
+        <!-- Loading skeleton state (hidden by default) -->
+        <div id="loading-state" class="loading-state hidden" role="status" aria-label="Analysing…">
+          <div class="skeleton-card" aria-hidden="true">
+            <div class="skeleton-header">
+              <div class="skeleton-gauge"></div>
+              <div class="skeleton-meta">
+                <div class="skeleton-line skeleton-badge-line"></div>
+                <div class="skeleton-line skeleton-title-line"></div>
+                <div class="skeleton-line skeleton-sub-line"></div>
+              </div>
+            </div>
+            <div class="skeleton-block skeleton-msg"></div>
+            <div class="skeleton-rows">
+              <div class="skeleton-row"></div>
+              <div class="skeleton-row"></div>
+            </div>
+          </div>
+          <div class="loading-status">
+            <span class="loading-pulse-dot" aria-hidden="true"></span>
+            <p class="loading-text">Scanning for deception signals…</p>
+          </div>
+        </div>
+
+        <!-- Error state (hidden by default) -->
+        <div id="error-state" class="error-state hidden" role="alert">
+          <div class="error-icon-box" aria-hidden="true">
+            <svg class="error-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="8" x2="12" y2="12"/>
+              <line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+          </div>
+          <div class="error-content">
+            <h3 class="error-title">Analysis could not be completed</h3>
+            <p id="error-message" class="error-message"></p>
+          </div>
+        </div>
+
+        <!-- Result card (hidden by default) -->
+        <div id="result-card" class="card result-card hidden">
+          <!-- Score gauge & summary -->
+          <div class="score-section" aria-labelledby="gauge-label">
+            <div class="gauge-container" aria-hidden="true">
+              <svg class="gauge" viewBox="0 0 200 120">
+                <!-- Background arc -->
+                <path class="gauge-bg" d="M20 100 A80 80 0 0 1 180 100"
+                      fill="none" stroke-width="14" stroke-linecap="round"/>
+                <!-- Coloured arc -->
+                <path id="gauge-arc" class="gauge-fill" d="M20 100 A80 80 0 0 1 180 100"
+                      fill="none" stroke-width="14" stroke-linecap="round"
+                      stroke-dasharray="251.2" stroke-dashoffset="251.2"/>
+                <!-- Needle -->
+                <line id="gauge-needle" x1="100" y1="100" x2="100" y2="28"
+                      stroke="white" stroke-width="2.5" stroke-linecap="round"
+                      transform="rotate(-90, 100, 100)"/>
+                <circle cx="100" cy="100" r="5" fill="white" opacity="0.9"/>
+                <!-- Score text -->
+                <text id="gauge-score" x="100" y="85" text-anchor="middle"
+                      class="gauge-score-text" fill="currentColor">0</text>
+                <text id="gauge-label" x="100" y="102" text-anchor="middle"
+                      class="gauge-label-text" fill="currentColor">Threat Score</text>
+              </svg>
+            </div>
+            <div class="score-meta">
+              <div class="score-meta-header">
+                <span id="risk-badge" class="risk-badge" aria-label="Risk level">--</span>
+                <span id="scam-type" class="scam-type-label">--</span>
+              </div>
+              <p id="result-summary" class="result-summary-text"></p>
+              <div id="score-formula" class="score-formula-text"></div>
+            </div>
+          </div>
+
+          <!-- Highlighted Original Message -->
+          <div id="highlighted-section" class="result-section">
+            <div class="section-title-row">
+              <h2 class="section-title">
+                <svg class="inline-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                  <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/>
+                  <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"/>
+                </svg>
+                Analysed Message &amp; Trigger Highlights
+              </h2>
+            </div>
+            <!-- Category Legend -->
+            <div id="highlight-legend" class="highlight-legend" aria-label="Highlight colour legend"></div>
+            <div id="highlighted-message" class="highlighted-box" role="region" aria-label="Message with highlighted threats"></div>
+          </div>
+
+          <!-- Why this score list -->
+          <div id="signals-section" class="result-section">
+            <h2 id="signals-title" class="section-title">
+              <svg class="inline-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+              </svg>
+              Why this score
+            </h2>
+            <div class="signals-list" id="signals-list" role="list"></div>
+          </div>
+
+          <!-- URLs detected -->
+          <div id="urls-section" class="result-section hidden">
+            <h2 class="section-title">
+              <svg class="inline-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path fill-rule="evenodd" d="M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4 0 005.656 0l3-3a4 4 0 00-5.656-5.656l-1.5 1.5a1 1 0 101.414 1.414l1.5-1.5zm-5 5a2 2 0 012.828 0 1 1 0 101.414-1.414 4 4 0 00-5.656 0l-3 3a4 4 0 105.656 5.656l1.5-1.5a1 1 0 10-1.414-1.414l-1.5 1.5a2 2 0 11-2.828-2.828l3-3z" clip-rule="evenodd"/>
+              </svg>
+              URLs Detected
+            </h2>
+            <ul id="urls-list" class="urls-list" aria-label="Detected URLs"></ul>
+          </div>
+
+          <!-- What should I do now panel -->
+          <div id="action-panel" class="action-panel" role="region" aria-labelledby="action-title">
+            <div id="critical-alert" class="critical-alert hidden" role="alert"></div>
+            <h3 class="action-title" id="action-title">
+              <svg class="inline-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd"/>
+              </svg>
+              What should I do now?
+            </h3>
+            <ol id="action-list" class="action-list" aria-label="Recommended action steps"></ol>
+          </div>
+
+          <!-- ML section (if ML enabled) -->
+          <div id="ml-section" class="result-section hidden">
+            <h2 class="section-title">
+              <svg class="inline-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path d="M13 7H7v6h6V7z"/>
+                <path fill-rule="evenodd" d="M7 2a1 1 0 012 0v1h2V2a1 1 0 112 0v1h2a2 2 0 012 2v2h1a1 1 0 110 2h-1v2h1a1 1 0 110 2h-1v2a2 2 0 01-2 2h-2v1a1 1 0 11-2 0v-1H9v1a1 1 0 11-2 0v-1H5a2 2 0 01-2-2v-2H2a1 1 0 110-2h1V9H2a1 1 0 010-2h1V5a2 2 0 012-2h2V2zM5 5v10h10V5H5z" clip-rule="evenodd"/>
+              </svg>
+              ML Intelligence
+              <span class="badge badge-beta">Beta</span>
+            </h2>
+            <div id="ml-details" class="ml-details"></div>
+          </div>
+
+          <!-- Result Actions: Copy report -->
+          <div class="result-actions">
+            <button id="btn-copy-result" class="btn-copy pill" type="button" aria-label="Copy analysis report to clipboard">
+              <svg class="btn-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z"/>
+                <path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 2H9a3 3 0 01-3-2z"/>
+              </svg>
+              <span>Copy result</span>
+            </button>
+            <span id="copy-hint" class="copy-hint" aria-live="polite"></span>
+          </div>
+
+          <!-- Disclaimer -->
+          <div class="result-disclaimer" role="note">
+            <svg class="disclaimer-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+              <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+            </svg>
+            <span id="disclaimer-text">Cyber Shield provides heuristic risk analysis, not legal or definitive forensic advice. When in doubt, never transfer funds, share OTPs, or install APKs.</span>
+          </div>
+        </div>
+
+        <!-- Copy result floating toast -->
+        <div id="copy-toast" class="copy-toast" role="status" aria-live="polite">
+          <svg class="toast-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+          </svg>
+          <span class="toast-text">Analysis report copied to clipboard!</span>
+        </div>
+      </div>
+
+  </main>
+
+  <!-- ═══════════════════════════════ LEARN SECTION (OFF-WHITE) ══════════════ -->
+  <section id="learn" class="learn-section" aria-labelledby="learn-heading">
+    <!-- Smooth Dark-to-Light Transition -->
+    <div class="dark-to-light-transition" aria-hidden="true"></div>
+
+    <div class="container">
+      <div class="section-header reveal-group">
+        <span class="section-tag reveal-item">Citizen Awareness</span>
+        <h2 id="learn-heading" class="section-heading reveal-item">Learn Common Scams in India</h2>
+        <p class="section-sub reveal-item">Understand the deceptive mechanics behind phishing, digital arrest extortion, and rogue Android APKs.</p>
+      </div>
+
+      <div class="learn-grid reveal-group">
+
+        <!-- 1. How Phishing Works -->
+        <article class="learn-card reveal-item" tabindex="0">
+          <div class="learn-icon-box icon-phishing" aria-hidden="true">
+            <svg class="learn-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+              <polyline points="22,6 12,13 2,6"/>
+              <path d="M12 13v6a2 2 0 0 1-2 2H9"/>
+            </svg>
+          </div>
+          <h3 class="learn-card-title">How Phishing Works</h3>
+          <p class="learn-card-body">
+            Fraudsters mimic trusted banks (SBI, HDFC), payment apps (Paytm, PhonePe), or couriers to steal OTPs and credentials through fake links.
+          </p>
+          <ul class="learn-tips">
+            <li><strong>The Lure:</strong> Artificial panic like "account blocked in 24h" or "lottery reward".</li>
+            <li><strong>The Fake Link:</strong> Typosquatted lookalike URLs (e.g. <code>paytrn.com</code>, <code>sbi-verify.xyz</code>).</li>
+            <li><strong>The Theft:</strong> Harvesting OTPs, PINs, or CVVs to empty your bank accounts.</li>
+          </ul>
+        </article>
+
+        <!-- 2. How Digital Arrest Scams Work -->
+        <article class="learn-card reveal-item" tabindex="0">
+          <div class="learn-icon-box icon-arrest" aria-hidden="true">
+            <svg class="learn-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="3" width="20" height="14" rx="2"/>
+              <line x1="8" y1="21" x2="16" y2="21"/>
+              <line x1="12" y1="17" x2="12" y2="21"/>
+              <path d="M10 9l5 3-5 3V9z" fill="currentColor"/>
+            </svg>
+          </div>
+          <h3 class="learn-card-title">How Digital Arrest Scams Work</h3>
+          <p class="learn-card-body">
+            Scammers pose as CBI, Police, NCB, or Customs officers and falsely claim your Aadhaar or SIM was used in a drug parcel or money laundering case.
+          </p>
+          <ul class="learn-tips">
+            <li><strong>Video Call Con:</strong> Demands to "stay on Skype/WhatsApp video call" with fake police backdrops.</li>
+            <li><strong>Secrecy:</strong> Strict orders of "do not tell anyone" to isolate victims from family and lawyers.</li>
+            <li><strong>Extortion:</strong> Coercing victims to transfer money to a "safe government account" for verification.</li>
+          </ul>
+        </article>
+
+        <!-- 3. How to Spot Malicious Apps -->
+        <article class="learn-card reveal-item" tabindex="0">
+          <div class="learn-icon-box icon-app" aria-hidden="true">
+            <svg class="learn-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
+              <line x1="12" y1="18" x2="12.01" y2="18"/>
+              <path d="M12 6v6m-3-3l3 3 3-3"/>
+            </svg>
+          </div>
+          <h3 class="learn-card-title">How to Spot Malicious Apps</h3>
+          <p class="learn-card-body">
+            Attackers trick users into installing rogue APK files or remote desktop tools disguised as customer service, electricity, or KYC apps.
+          </p>
+          <ul class="learn-tips">
+            <li><strong>Sideloading:</strong> Urging you to "enable unknown sources" and install an <code>.apk</code> link.</li>
+            <li><strong>Remote Access:</strong> Pushing AnyDesk, TeamViewer, or QuickSupport to take over your screen.</li>
+            <li><strong>Dangerous Permissions:</strong> Requesting Accessibility or SMS permissions to steal incoming OTPs.</li>
+          </ul>
+        </article>
+
+      </div><!-- /learn-grid -->
+
+      <!-- 4. Golden Rules Checklist -->
+      <article class="golden-rules-card reveal-group" tabindex="0">
+        <div class="golden-rules-header">
+          <div class="learn-icon-box icon-checklist" aria-hidden="true">
+            <svg class="learn-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+              <path d="m9 12 2 2 4-4"/>
+            </svg>
+          </div>
+          <div>
+            <h3 class="golden-rules-title">Golden Rules Security Checklist</h3>
+            <p class="golden-rules-sub">Core safety principles to protect yourself and your family across every digital transaction:</p>
+          </div>
+        </div>
+
+        <ul class="golden-rules-grid">
+          <li class="golden-rule-item">
+            <svg class="golden-check-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+            </svg>
+            <div><strong>Never share OTPs or PINs</strong> &mdash; Legitimate banks, RBI, and telecom operators NEVER ask for OTPs, CVVs, or ATM PINs.</div>
+          </li>
+          <li class="golden-rule-item">
+            <svg class="golden-check-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+            </svg>
+            <div><strong>Digital arrest is fake</strong> &mdash; Indian law enforcement (Police, CBI, ED, Courts) NEVER conducts arrests or trials over video calls.</div>
+          </li>
+          <li class="golden-rule-item">
+            <svg class="golden-check-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+            </svg>
+            <div><strong>Never install APK links</strong> &mdash; Only download software through official app stores (Google Play Store or Apple App Store).</div>
+          </li>
+          <li class="golden-rule-item">
+            <svg class="golden-check-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+            </svg>
+            <div><strong>Verify URL spelling</strong> &mdash; Always check the exact domain name character-by-character before entering credentials.</div>
+          </li>
+          <li class="golden-rule-item">
+            <svg class="golden-check-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+            </svg>
+            <div><strong>Pause on artificial urgency</strong> &mdash; Threats of electricity disconnection or immediate block are designed to trigger hasty mistakes.</div>
+          </li>
+          <li class="golden-rule-item">
+            <svg class="golden-check-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+            </svg>
+            <div><strong>Call verified numbers only</strong> &mdash; Dial the fraud helpline on the back of your physical debit card, never numbers found on Google.</div>
+          </li>
+        </ul>
+      </article>
+
+    </div><!-- /container -->
+  </section>
+
+  <!-- ═══════════════════════════════ REPORT SECTION (INDIA) ═════════════════ -->
+  <section id="report" class="report-section" aria-labelledby="report-section-title">
+    <div class="container">
+      <div class="report-header reveal-group">
+        <span class="report-badge reveal-item">Official Government Channels</span>
+        <h2 id="report-section-title" class="report-title reveal-item">Report Cyber Fraud in India</h2>
+        <p class="report-sub reveal-item">If you have been targeted, lost money, or suspect a scam, act immediately through official Government of India channels:</p>
+      </div>
+
+      <div class="report-grid reveal-group">
+        <!-- 1. Helpline 1930 -->
+        <div class="report-card primary-helpline reveal-item">
+          <div class="report-card-top">
+            <div class="report-icon-box" aria-hidden="true">
+              <svg class="report-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+              </svg>
+            </div>
+            <span class="report-tag">Toll-Free 24x7</span>
+          </div>
+          <h3 class="report-card-name">Call 1930 Helpline</h3>
+          <p class="report-card-desc">National Cyber Crime Helpline (I4C, Ministry of Home Affairs). Call immediately within the <strong>Golden Hour</strong> to freeze stolen money in transit across bank networks.</p>
+          <a href="tel:1930" class="report-btn pill pill-call">Dial 1930 Now</a>
+        </div>
+
+        <!-- 2. cybercrime.gov.in -->
+        <div class="report-card reveal-item">
+          <div class="report-card-top">
+            <div class="report-icon-box" aria-hidden="true">
+              <svg class="report-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="2" y1="12" x2="22" y2="12"/>
+                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+              </svg>
+            </div>
+            <span class="report-tag">National Portal</span>
+          </div>
+          <h3 class="report-card-name">cybercrime.gov.in</h3>
+          <p class="report-card-desc">National Cyber Crime Reporting Portal. File an official formal complaint for financial fraud, digital arrest threats, social engineering, or identity misuse with evidence.</p>
+          <a href="https://cybercrime.gov.in" target="_blank" rel="noopener noreferrer" class="report-btn pill">Lodge Complaint &rarr;</a>
+        </div>
+
+        <!-- 3. Sanchar Saathi (Chakshu) -->
+        <div class="report-card reveal-item">
+          <div class="report-card-top">
+            <div class="report-icon-box" aria-hidden="true">
+              <svg class="report-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
+                <line x1="12" y1="18" x2="12.01" y2="18"/>
+                <path d="M8 6h8M8 10h5"/>
+              </svg>
+            </div>
+            <span class="report-tag">DoT Portal</span>
+          </div>
+          <h3 class="report-card-name">Sanchar Saathi (Chakshu)</h3>
+          <p class="report-card-desc">Department of Telecommunications portal. Report suspected fraud calls, SMS messages, and spoofed WhatsApp numbers to block fraud SIMs and blacklisted handsets.</p>
+          <a href="https://sancharsaathi.gov.in" target="_blank" rel="noopener noreferrer" class="report-btn pill">Visit Sanchar Saathi &rarr;</a>
+        </div>
+
+        <!-- 4. Bank Official Number -->
+        <div class="report-card reveal-item">
+          <div class="report-card-top">
+            <div class="report-icon-box" aria-hidden="true">
+              <svg class="report-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
+                <line x1="1" y1="10" x2="23" y2="10"/>
+              </svg>
+            </div>
+            <span class="report-tag">Card / UPI Freeze</span>
+          </div>
+          <h3 class="report-card-name">Bank Official Helpline</h3>
+          <p class="report-card-desc">Immediately call your bank's verified toll-free number printed on the <strong>back of your debit card</strong> to block cards, lock UPI, and freeze net banking.</p>
+          <span class="report-note">Never search bank numbers on Google; use the back of your card.</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════ FOOTER ════════════════════════════════ -->
+  <footer class="site-footer" role="contentinfo">
+    <div class="container footer-inner">
+      <p class="footer-copy">
+        &copy; 2026 Cyber Shield &mdash; Built for citizen cybersecurity awareness across India.
+      </p>
+      <p class="footer-disclaimer">
+        Cyber Shield gives a heuristic risk estimate, not a guarantee. When in doubt, don't click, don't pay, and verify through official channels.
+      </p>
+    </div>
+  </footer>
+
+  <script src="js/vortex.js"></script>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

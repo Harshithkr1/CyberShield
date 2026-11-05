@@ -1,0 +1,64 @@
+{
+  "model_type": "StandardScaler + LogisticRegression",
+  "features": [
+    "url_length",
+    "dot_count",
+    "hyphen_count",
+    "digit_count",
+    "entropy",
+    "has_ip_host",
+    "suspicious_tld",
+    "uses_https",
+    "subdomain_count"
+  ],
+  "means": [
+    32.87,
+    1.48,
+    1.415,
+    0.425,
+    3.952814,
+    0.04,
+    0.46,
+    0.5,
+    0.3
+  ],
+  "stds": [
+    12.346785,
+    0.79975,
+    1.600867,
+    1.924675,
+    0.275726,
+    0.195959,
+    0.498397,
+    0.5,
+    0.655744
+  ],
+  "coefficients": [
+    0.882301,
+    -0.05958,
+    1.169193,
+    0.504583,
+    0.825608,
+    0.489489,
+    1.283386,
+    -1.793061,
+    -0.006779
+  ],
+  "intercept": 0.045255,
+  "metrics": {
+    "accuracy": 1.0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0,
+    "confusion_matrix": [
+      [
+        20,
+        0
+      ],
+      [
+        0,
+        20
+      ]
+    ]
+  }
+}

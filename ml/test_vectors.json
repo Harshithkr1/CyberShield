@@ -1,0 +1,127 @@
+{
+  "description": "Validation test vectors with Python-predicted probabilities for text and URL classifiers",
+  "texts": [
+    {
+      "text": "This is Officer R. K. Verma from Central Bureau of Investigation. You are under digital arrest. Stay on video call and transfer funds to safe account for verification.",
+      "predicted_probability": 0.9015,
+      "prediction": 1,
+      "label_name": "SCAM"
+    },
+    {
+      "text": "Dear SBI user, your bank account KYC has expired. Your debit card will be blocked within 24 hours. Update immediately at http://sbi-kyc-verify-portal.xyz",
+      "predicted_probability": 0.9178,
+      "prediction": 1,
+      "label_name": "SCAM"
+    },
+    {
+      "text": "Your FedEx courier parcel #FDX-99821 is on hold at customs clearance. Pay customs duty fee of Rs 49 to release package: http://fedx-customs-clearance.top/track",
+      "predicted_probability": 0.8233,
+      "prediction": 1,
+      "label_name": "SCAM"
+    },
+    {
+      "text": "Urgent notice from Power Grid: Electricity connection will be disconnected tonight. Install our electricity bill app: http://quick-power-bill.org/payment.apk",
+      "predicted_probability": 0.7308,
+      "prediction": 1,
+      "label_name": "SCAM"
+    },
+    {
+      "text": "PhonePe: Congratulations! You have won Rs 2999 scratch card cashback in your wallet. Claim money directly to bank: http://phonepe-rewards.xyz",
+      "predicted_probability": 0.9089,
+      "prediction": 1,
+      "label_name": "SCAM"
+    },
+    {
+      "text": "Hi Rohit, please find the attached presentation slides and agenda for tomorrow's project review at 3 PM in the conference room. Let me know if you have additions.",
+      "predicted_probability": 0.0585,
+      "prediction": 0,
+      "label_name": "SAFE"
+    },
+    {
+      "text": "Dear customer, your OTP for login to HDFC Bank NetBanking is 591823. Valid for 10 minutes. Do not share OTP with anyone including bank staff.",
+      "predicted_probability": 0.2954,
+      "prediction": 0,
+      "label_name": "SAFE"
+    },
+    {
+      "text": "Your Zomato order from Biryani Blues has been picked up by delivery partner Amit and will arrive in approximately 25 minutes.",
+      "predicted_probability": 0.1983,
+      "prediction": 0,
+      "label_name": "SAFE"
+    },
+    {
+      "text": "IRCTC Train Ticket Confirmed: PNR #2458912344, Train 12951 Mumbai Rajdhani, Coach B3 Berth 45 (LB). Journey Date: 12-Nov-2026.",
+      "predicted_probability": 0.0699,
+      "prediction": 0,
+      "label_name": "SAFE"
+    },
+    {
+      "text": "Delhi Metro smart card recharge of Rs 200 was successful. Current balance is Rs 340. Thank you for using DMRC services.",
+      "predicted_probability": 0.1747,
+      "prediction": 0,
+      "label_name": "SAFE"
+    }
+  ],
+  "urls": [
+    {
+      "url": "http://sbi-kyc-verify-portal.xyz/login.php",
+      "predicted_probability": 0.9978,
+      "prediction": 1,
+      "label_name": "MALICIOUS"
+    },
+    {
+      "url": "http://185.220.101.5/police/digital-arrest",
+      "predicted_probability": 0.9989,
+      "prediction": 1,
+      "label_name": "MALICIOUS"
+    },
+    {
+      "url": "http://fedx-customs-clearance.top/track",
+      "predicted_probability": 0.9895,
+      "prediction": 1,
+      "label_name": "MALICIOUS"
+    },
+    {
+      "url": "http://quick-power-bill.org/payment.apk",
+      "predicted_probability": 0.9266,
+      "prediction": 1,
+      "label_name": "MALICIOUS"
+    },
+    {
+      "url": "http://phonpe-cashback-claim.top/scratch",
+      "predicted_probability": 0.9824,
+      "prediction": 1,
+      "label_name": "MALICIOUS"
+    },
+    {
+      "url": "https://www.google.co.in",
+      "predicted_probability": 0.0038,
+      "prediction": 0,
+      "label_name": "SAFE"
+    },
+    {
+      "url": "https://onlinesbi.sbi",
+      "predicted_probability": 0.0021,
+      "prediction": 0,
+      "label_name": "SAFE"
+    },
+    {
+      "url": "https://netbanking.hdfcbank.com",
+      "predicted_probability": 0.019,
+      "prediction": 0,
+      "label_name": "SAFE"
+    },
+    {
+      "url": "https://cybercrime.gov.in",
+      "predicted_probability": 0.0123,
+      "prediction": 0,
+      "label_name": "SAFE"
+    },
+    {
+      "url": "https://irctc.co.in",
+      "predicted_probability": 0.0012,
+      "prediction": 0,
+      "label_name": "SAFE"
+    }
+  ]
+}
