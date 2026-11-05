@@ -1,7 +1,12 @@
 target/
 .git/
 .gitignore
+.dockerignore
+.idea/
+.vscode/
 *.md
 ml/
-.vscode/
-.idea/
+docs/
+.github/
+.antigravity-ide/
+.gemini/
