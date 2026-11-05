@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cyber Shield - hero preview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #000;
+    --fg: #fff;
+    --muted: rgba(255,255,255,.72);
+    --line: rgba(255,255,255,.16);
+    --font: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  html { scroll-behavior: smooth; }
+  body { background: var(--bg); color: var(--fg); font-family: var(--font); -webkit-font-smoothing: antialiased; }
+
+  .hero { position: relative; min-height: 100svh; overflow: hidden; isolation: isolate; display: flex; flex-direction: column; }
+  #vortex { position: absolute; inset: 0; width: 100%; height: 100%; z-index: -1; display: block; }
+
+  /* thin frame with + corner marks */
+  .frame { position: absolute; inset: 6px 56px 0; border: 1px solid var(--line); border-bottom: 0; pointer-events: none; }
+  .frame::before, .frame::after { content: "+"; position: absolute; top: -9px; color: rgba(255,255,255,.55); font-size: 14px; line-height: 1; }
+  .frame::before { left: -5px; } .frame::after { right: -5px; }
+
+  /* nav */
+  .nav { position: relative; z-index: 2; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; height: 58px; padding: 0 88px; }
+  .logo { display: inline-flex; align-items: center; gap: 10px; font-weight: 600; letter-spacing: .08em; font-size: 18px; color: #fff; text-decoration: none; }
+  .nav ul { display: flex; gap: 48px; list-style: none; padding: 0; }
+  .nav a { color: var(--muted); text-decoration: none; font-size: 16px; transition: color .2s; }
+  .nav a:hover, .nav a:focus-visible { color: #fff; }
+  .nav .cta { justify-self: end; }
+
+  /* buttons: glass pill + white pill */
+  .pill { position: relative; display: inline-flex; align-items: center; gap: 10px; height: 44px; padding: 0 24px; border-radius: 999px;
+    font: 500 15px/1 var(--font); letter-spacing: .02em; text-transform: uppercase; text-decoration: none; cursor: pointer; border: 1px solid rgba(255,255,255,.38);
+    color: #fff; background: rgba(0,0,0,.55); backdrop-filter: blur(8px); transition: transform .15s ease, border-color .2s; }
+  .pill::after { content: ""; position: absolute; left: 18%; right: 18%; bottom: -1px; height: 2px; border-radius: 2px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,.95), transparent); opacity: .7; }
+  .pill:hover { border-color: #fff; transform: translateY(-1px); }
+  .pill:active { transform: translateY(1px) scale(.98); }
+  .pill:focus-visible, .pill-solid:focus-visible { outline: 2px solid #5eead4; outline-offset: 3px; }
+  .pill-solid { border-color: #fff; background: #fff; color: #000; backdrop-filter: none; }
+  .pill-solid::after { display: none; }
+
+  /* headline */
+  .hero-body { position: relative; z-index: 1; flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 0 20px 120px; }
+  h1 { font-weight: 500; font-size: clamp(40px, 7.4vw, 104px); line-height: .98; letter-spacing: -.035em; }
+  h1 .l2 { display: block; background: linear-gradient(180deg, #e9e9ee 20%, #8b8b95 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .sub { margin-top: 34px; max-width: 640px; font-size: clamp(16px, 1.6vw, 21px); line-height: 1.75; color: #fff; }
+  .actions { margin-top: 44px; display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; }
+
+  /* reveal on load */
+  .rise { opacity: 0; transform: translateY(22px); animation: rise .9s cubic-bezier(.2,.7,.2,1) forwards; }
+  .d1 { animation-delay: .1s } .d2 { animation-delay: .25s } .d3 { animation-delay: .4s } .d4 { animation-delay: .55s }
+  @keyframes rise { to { opacity: 1; transform: none; } }
+
+  /* scam-type marquee (replaces the partner-logo strip) */
+  .strip { position: absolute; left: 0; right: 0; bottom: 34px; z-index: 1; overflow: hidden;
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent); mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent); }
+  .track { display: flex; gap: 72px; width: max-content; animation: slide 38s linear infinite; }
+  .track span { display: inline-flex; align-items: center; gap: 10px; font-weight: 600; font-size: 22px; letter-spacing: .02em; color: rgba(255,255,255,.62); white-space: nowrap; }
+  .track i { width: 10px; height: 10px; border-radius: 50%; border: 2px solid currentColor; display: inline-block; }
+  @keyframes slide { to { transform: translateX(-50%); } }
+
+  /* preview-only mood buttons */
+  .dev { position: fixed; right: 12px; bottom: 12px; z-index: 9; display: flex; gap: 6px; font: 12px var(--font); }
+  .dev button { background: #111; color: #ddd; border: 1px solid #333; border-radius: 6px; padding: 6px 9px; cursor: pointer; }
+
+  @media (max-width: 760px) {
+    .frame { inset: 0 10px; }
+    .nav { grid-template-columns: 1fr auto; padding: 0 22px; }
+    .nav ul { display: none; }
+    .hero-body { padding-bottom: 150px; }
+    .track { gap: 44px; } .track span { font-size: 17px; }
+    .sub br { display: none; }
+    .pill { height: 48px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .rise { animation: none; opacity: 1; transform: none; }
+    .track { animation: none; }
+    html { scroll-behavior: auto; }
+  }
+</style>
+</head>
+<body>
+<header class="hero" id="top">
+  <canvas id="vortex" aria-hidden="true"></canvas>
+  <div class="frame" aria-hidden="true"></div>
+
+  <nav class="nav" aria-label="Main">
+    <a class="logo" href="#top" aria-label="Cyber Shield home">
+      <svg width="26" height="28" viewBox="0 0 26 28" fill="none" aria-hidden="true"><path d="M13 1.5 2.5 5.4v7.2c0 6.4 4.4 11.1 10.5 13.9 6.1-2.8 10.5-7.5 10.5-13.9V5.4L13 1.5Z" stroke="#fff" stroke-width="2" stroke-linejoin="round"/><path d="m8.5 13.6 3.2 3.2 5.8-6.2" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      CYBER SHIELD
+    </a>
+    <ul>
+      <li><a href="#about">About</a></li>
+      <li><a href="#features">Features</a></li>
+      <li><a href="#check">Check</a></li>
+      <li><a href="#learn">Learn</a></li>
+      <li><a href="#report">Report</a></li>
+    </ul>
+    <a class="pill cta" href="#check">Check now <span aria-hidden="true">&raquo;</span></a>
+  </nav>
+
+  <div class="hero-body">
+    <h1 class="rise d1">The scam detection system<span class="l2">for every Indian phone</span></h1>
+    <p class="sub rise d2">Paste any suspicious message, link or call script.<br>Get a clear risk score and know exactly why, in seconds.</p>
+    <div class="actions rise d3">
+      <a class="pill" href="#check">Check a message <span aria-hidden="true">&raquo;</span></a>
+      <a class="pill pill-solid" href="#learn">Learn the scams</a>
+    </div>
+  </div>
+
+  <div class="strip" aria-label="Scams Cyber Shield detects">
+    <div class="track">
+      <span><i></i>PHISHING</span><span><i></i>DIGITAL ARREST</span><span><i></i>FAKE APK</span><span><i></i>UPI FRAUD</span><span><i></i>KYC SCAM</span><span><i></i>COURIER SCAM</span><span><i></i>OTP THEFT</span><span><i></i>LOTTERY BAIT</span>
+      <span><i></i>PHISHING</span><span><i></i>DIGITAL ARREST</span><span><i></i>FAKE APK</span><span><i></i>UPI FRAUD</span><span><i></i>KYC SCAM</span><span><i></i>COURIER SCAM</span><span><i></i>OTP THEFT</span><span><i></i>LOTTERY BAIT</span>
+    </div>
+  </div>
+</header>
+
+<div class="dev" aria-label="Preview only">
+  <button onclick="cyberVortex.setMood('calm')">calm</button>
+  <button onclick="cyberVortex.setMood('scanning');cyberVortex.pulse()">scanning</button>
+  <button onclick="cyberVortex.setMood('low')">low</button>
+  <button onclick="cyberVortex.setMood('high')">high</button>
+  <button onclick="cyberVortex.setMood('critical');cyberVortex.pulse()">critical</button>
+</div>
+
+<script src="vortex.js"></script>
+</body>
+</html>
