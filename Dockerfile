@@ -26,3 +26,4 @@ EXPOSE 8080
 
 # Start Spring Boot application with PORT variable expansion
 ENTRYPOINT ["sh", "-c", "java -Dserver.port=${PORT:-8080} -jar app.jar"]
+
