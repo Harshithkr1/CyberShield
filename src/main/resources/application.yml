@@ -12,6 +12,9 @@ spring:
 # Cybershield rule configuration (all lists default to empty).
 # Populate these in a later sprint when real detectors are ready.
 cybershield:
+  pay:
+    signing-secret: ${UPI_SIGNING_SECRET:}
+    cors-allowed-origin: ${CORS_ALLOWED_ORIGIN:}
   rules:
     urgency-keywords: []
     trusted-brands: []
