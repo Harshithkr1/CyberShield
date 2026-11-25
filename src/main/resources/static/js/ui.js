@@ -8,6 +8,7 @@
  */
 
 import { t, getLang, onLangChange } from './i18n.js';
+import { buildProtectedLink, validateDestinationUrl } from './go-utils.js';
 
 // ── DOM references ────────────────────────────────────────────────────────
 
@@ -623,8 +624,22 @@ function renderUrlsList(urls) {
   for (const url of urls) {
     const li = document.createElement('li');
     li.className = 'url-item';
-    li.textContent = url;
-    li.setAttribute('title', url);
+
+    const urlText = document.createElement('span');
+    urlText.className = 'url-item-text';
+    urlText.textContent = url;
+    urlText.setAttribute('title', url);
+    li.appendChild(urlText);
+
+    if (validateDestinationUrl(url).valid) {
+      const checkLink = document.createElement('a');
+      checkLink.className = 'btn-open-with-check chip';
+      checkLink.href = buildProtectedLink(url);
+      checkLink.setAttribute('data-i18n', 'check.openWithCheckBtn');
+      checkLink.textContent = tOr('check.openWithCheckBtn', 'Open with check');
+      li.appendChild(checkLink);
+    }
+
     urlsList.appendChild(li);
   }
 

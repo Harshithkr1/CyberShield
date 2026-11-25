@@ -516,6 +516,33 @@
         </div>
       </div>
 
+      <!-- Protect a link before sharing -->
+      <section id="protect-link-card" class="card protect-link-card" aria-labelledby="protect-link-heading">
+        <h2 id="protect-link-heading" class="section-title" data-i18n="check.protect.heading">Protect a link before you share it</h2>
+        <p class="protect-link-sub" data-i18n="check.protect.sub">People who tap this link will be asked before they go.</p>
+        <div class="protect-link-form">
+          <input
+            id="protect-url-input"
+            class="verify-input protect-url-input"
+            type="url"
+            inputmode="url"
+            data-i18n-placeholder="check.protect.placeholder"
+            placeholder="Paste an http:// or https:// URL"
+            aria-labelledby="protect-link-heading"
+          />
+          <button id="protect-generate-btn" class="pill protect-generate-btn" type="button" data-i18n="check.protect.generateBtn">Create link</button>
+        </div>
+        <p id="protect-error" class="protect-link-error hidden" role="alert"></p>
+        <div id="protect-output" class="protect-link-output hidden">
+          <code id="protect-result-url" class="protect-result-url"></code>
+          <div class="protect-output-actions">
+            <button id="protect-copy-btn" class="chip" type="button" data-i18n="check.protect.copyBtn">Copy</button>
+            <button id="protect-share-btn" class="chip" type="button" data-i18n="check.protect.shareBtn">Share</button>
+            <span id="protect-copy-status" class="protect-copy-status" aria-live="polite"></span>
+          </div>
+        </div>
+      </section>
+
   </main>
 
   <!-- ═══════════════════════════════ LEARN GAME (OFF-WHITE) ════════════════ -->

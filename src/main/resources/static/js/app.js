@@ -8,6 +8,13 @@
 import { analyzeText } from './api.js';
 import { runClientSideAnalysis } from './client-engine.js';
 import { showEmpty, showLoading, showResult } from './ui.js';
+import { t } from './i18n.js';
+import {
+  buildProtectedLink,
+  validateDestinationUrl,
+  decodeBase64UrlUtf8,
+  extractFragmentParam
+} from './go-utils.js';
 
 // ── DOM references ────────────────────────────────────────────────────────
 
@@ -361,8 +368,105 @@ function initBentoGlow() {
   });
 }
 
+// ── Protect a link before sharing + #check-u= prefill ─────────────────────
+
+const protectInput = document.getElementById('protect-url-input');
+const protectGenBtn = document.getElementById('protect-generate-btn');
+const protectError = document.getElementById('protect-error');
+const protectOutput = document.getElementById('protect-output');
+const protectResultUrl = document.getElementById('protect-result-url');
+const protectCopyBtn = document.getElementById('protect-copy-btn');
+const protectShareBtn = document.getElementById('protect-share-btn');
+const protectStatus = document.getElementById('protect-copy-status');
+
+function generateProtectedShareLink() {
+  if (!protectInput || !protectOutput || !protectResultUrl || !protectError) return;
+  const check = validateDestinationUrl(protectInput.value);
+  if (!check.valid) {
+    protectOutput.classList.add('hidden');
+    protectError.textContent = t('check.protect.invalidError');
+    protectError.classList.remove('hidden');
+    return;
+  }
+  const protectedUrl = buildProtectedLink(check.url);
+  protectError.classList.add('hidden');
+  protectResultUrl.textContent = protectedUrl;
+  if (protectStatus) protectStatus.textContent = '';
+  protectOutput.classList.remove('hidden');
+}
+
+if (protectGenBtn) {
+  protectGenBtn.addEventListener('click', generateProtectedShareLink);
+}
+if (protectInput) {
+  protectInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      generateProtectedShareLink();
+    }
+  });
+}
+if (protectCopyBtn && protectResultUrl) {
+  protectCopyBtn.addEventListener('click', async () => {
+    const val = protectResultUrl.textContent || '';
+    if (!val) return;
+    try {
+      await navigator.clipboard.writeText(val);
+      if (protectStatus) protectStatus.textContent = t('check.protect.copied');
+    } catch {
+      if (protectStatus) protectStatus.textContent = t('check.protect.copyFallback');
+    }
+  });
+}
+if (protectShareBtn && protectResultUrl) {
+  protectShareBtn.addEventListener('click', async () => {
+    const val = protectResultUrl.textContent || '';
+    if (!val) return;
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: t('go.title'),
+          text: t('check.protect.sub'),
+          url: val
+        });
+        return;
+      } catch (err) {
+        if (err && err.name === 'AbortError') return;
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(val);
+      if (protectStatus) protectStatus.textContent = t('check.protect.copied');
+    } catch {
+      if (protectStatus) protectStatus.textContent = t('check.protect.copyFallback');
+    }
+  });
+}
+
+function applyPreFilledUrlFromHash() {
+  const hash = window.location.hash || '';
+  if (!hash.startsWith('#check-u=')) return;
+  const raw = extractFragmentParam(`#${hash.slice('#check-'.length)}`, 'u');
+  if (!raw || !inputText) return;
+  try {
+    const decoded = decodeBase64UrlUtf8(raw);
+    const check = validateDestinationUrl(decoded);
+    if (!check.valid) return;
+    inputText.value = check.url;
+    updateCharCount();
+    const checkEl = document.getElementById('check');
+    if (checkEl) checkEl.scrollIntoView({ behavior: 'smooth' });
+    inputText.focus();
+  } catch {
+    // ignore malformed fragment
+  }
+}
+
+window.addEventListener('hashchange', applyPreFilledUrlFromHash);
+
 // ── Initial state ─────────────────────────────────────────────────────────
 
 showEmpty();
 initScrollReveal();
 initBentoGlow();
+applyPreFilledUrlFromHash();

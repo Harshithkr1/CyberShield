@@ -128,6 +128,18 @@
     "detailsInEnglish": "Details are shown in English.",
     "practiseScamBtn": "Practise this scam",
     "playOwnBtn": "Play your own message",
+    "openWithCheckBtn": "Open with check",
+    "protect": {
+      "heading": "Protect a link before you share it",
+      "sub": "People who tap this link will be asked before they go.",
+      "placeholder": "Paste an http:// or https:// URL",
+      "generateBtn": "Create link",
+      "copyBtn": "Copy",
+      "shareBtn": "Share",
+      "copied": "Protected link copied!",
+      "copyFallback": "Copy the protected link above manually.",
+      "invalidError": "This link can't be opened. Enter an http:// or https:// URL under 2000 characters."
+    },
     "samples": {
       "kycKn": "ಕನ್ನಡ KYC ಮಾದರಿ",
       "arrestHi": "हिन्दी डिजिटल अरेस्ट"
@@ -384,6 +396,61 @@
     "b4": "4. Ravi Rs.500 QR",
     "b5": "5. Reset Demo",
     "resetDone": "Cleared uss.* demo state."
+  },
+  "go": {
+    "tag": "Link Gate · Verification Assistant",
+    "title": "Check before you go",
+    "subtitle": "Inspect a link offline in your browser before deciding whether to open it.",
+    "emptyNote": "No destination link found in the URL fragment (#u=...). Paste a link in Check to create a protected link, or test the demo link below.",
+    "analyzing": "Analysing link offline…",
+    "destinationLabel": "Destination website (domain in bold):",
+    "blockedBadge": "BLOCKED",
+    "blockedTitle": "This link can't be opened",
+    "blockedBody": "Only standard http:// or https:// links up to 2000 characters are allowed here. Unsafe or malformed links (such as javascript:, data:, file:, or intent:) are stopped automatically.",
+    "levels": {
+      "LOW": "LOW RISK",
+      "MEDIUM": "MEDIUM RISK",
+      "HIGH": "HIGH RISK",
+      "CRITICAL": "CRITICAL RISK"
+    },
+    "scoreText": "Risk score: {score}/100",
+    "lowSummary": "No strong red flags found. Still be careful.",
+    "riskSummary": {
+      "MEDIUM": "Suspicious patterns detected. Double-check the bold domain before opening.",
+      "HIGH": "High risk: multiple deceptive link patterns detected. Going back is strongly recommended.",
+      "CRITICAL": "Critical risk: strong scam or malicious pattern detected. Do not open unless verified independently."
+    },
+    "signals": {
+      "maliciousApp": {
+        "apkLink": "Direct link to an Android installer (.apk) outside official app stores."
+      },
+      "url": {
+        "ipAddress": "Points to a raw IP address instead of a real bank or company domain.",
+        "shortener": "Uses a link shortener that hides the true destination.",
+        "suspiciousTld": "Uses a high-risk domain ending commonly abused in scam links.",
+        "noHttps": "Uses unencrypted HTTP instead of HTTPS.",
+        "keyword": "Includes deceptive banking or KYC keywords inside the web address.",
+        "brandImpersonation": "Impersonates a trusted brand using an unofficial domain name.",
+        "typosquatting": "Lookalike spelling mimics an official website."
+      },
+      "text": {
+        "brandMismatch": "Domain does not match the claimed organisation."
+      },
+      "generic": "Suspicious link pattern identified."
+    },
+    "mlFlag": "On-device URL model flagged {pct}% similarity to scam links.",
+    "goBackBtn": "Go back",
+    "goCheckBtn": "Open Scam Checker",
+    "checkWholeBtn": "Check the whole message",
+    "practiseBtn": "Practise this scam",
+    "reportBtn": "Report this link",
+    "continueBtn": "Continue to website",
+    "ackMediumBtn": "I understand the risks, continue",
+    "showAnywayBtn": "Show me the link anyway",
+    "highConfirmPrompt": "Confirm only if you verified this exact domain through an official source:",
+    "highConfirmBtn": "Confirm: reveal website link",
+    "tryRiskyBtn": "Try a risky link",
+    "tryRiskyHint": "Fictional demo: https://upi-kyc-in.top/update (never visited)",
+    "disclaimer": "Heuristic link check only, never stored or sent to a server. Always verify domains before entering OTPs or PINs."
   }
 }
-
