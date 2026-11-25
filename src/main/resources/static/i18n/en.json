@@ -1,4 +1,8 @@
 {
+  "hero": {
+    "line1": "The scam detection system",
+    "line2": "for every Indian"
+  },
   "lang": {
     "label": "Language",
     "en": "English",
