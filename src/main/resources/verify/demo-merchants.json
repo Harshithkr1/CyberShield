@@ -1,0 +1,38 @@
+[
+  {
+    "id": "ravi-stores",
+    "name": "Ravi Stores",
+    "upiId": "ravi@demobank",
+    "bank": "Demo Bank",
+    "category": "Grocery"
+  },
+  {
+    "id": "meera-tailors",
+    "name": "Meera Tailors",
+    "upiId": "meera.tailor@demobank",
+    "bank": "Demo Bank",
+    "category": "Tailor"
+  },
+  {
+    "id": "shanti-pharmacy",
+    "name": "Shanti Pharmacy",
+    "upiId": "shanti.meds@demobank",
+    "bank": "Demo Bank",
+    "category": "Pharmacy"
+  },
+  {
+    "id": "kiran-hardware",
+    "name": "Kiran Hardware",
+    "upiId": "kiran.tools@demobank",
+    "bank": "Demo Bank",
+    "category": "Hardware"
+  },
+  {
+    "id": "lakshmi-fruits",
+    "name": "Lakshmi Fruit Stall",
+    "upiId": "lakshmi.fruits@demobank",
+    "bank": "Demo Bank",
+    "category": "Fruits"
+  }
+]
+

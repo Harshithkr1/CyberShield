@@ -1,8 +1,23 @@
-# Cyber Shield
+# Cyber Shield – UPI Scam Simulator
 
-> **Cyber Shield** is a high-performance cybersecurity threat analysis engine and awareness dashboard designed to detect phishing lures, coercive "digital arrest" scams, malicious Android application packages (.apk), and credential harvesting attempts targeting Indian mobile phone and net-banking users.
+> **Check it. Learn it. Verify it.**
 >
-> Built with a zero-connection safety guarantee: **Cyber Shield never opens, fetches, or probes any analysed URL.**
+> Cyber Shield is a cybersecurity awareness and scam-simulation platform targeting phishing lures, UPI fraud, coercive "digital arrest" scripts, and malicious Android APKs. Built with a zero-connection safety guarantee: **Cyber Shield never opens, fetches, or probes any analysed URL.**
+
+---
+
+## Three Modules
+
+1. **Check (`#check`, `POST /api/analyze`)**
+   - Hybrid rule heuristics (`rules.json`, 4 Java detectors, English/Kannada/Hindi phrase coverage) + pure Java ML inference (`TextClassifier`, `UrlClassifier`).
+   - Highlights matched triggers, computes a 0–100 risk score, offers non-verdict `"No strong red flags found. Still verify in your bank app."` guidance on `LOW` results, and bridges directly to **Learn** (`Practise this scam`, `Play your own message`).
+2. **Learn (`#learn`, client-side with `static/data/scenarios.json`)**
+   - Interactive 9-scenario UPI scam simulator in **English (`en`), Kannada (`kn`), and Hindi (`hi`)** that runs completely client-side even when the backend is off.
+   - **Challenge mode** (20-second timer, tap red flags for `+2` pts, choose actions for `+10` pts, Demo Bank loss consequence, weak-spot practice) and **Simple mode** (`20px+` accessible typography, no timer, `"Trust it"` / `"Don't trust it"`, gentle feedback).
+3. **Verify (`#verify`, `/api/verify/*`, `pay-demo.html`)**
+   - **1 Before payment**: Verifies UPI IDs against 5 fictional `Demo Bank` merchants (`VERIFIED_DEMO`, `NAME_MISMATCH`, `LOOKALIKE` via Levenshtein distance `<= 2`, or `UNKNOWN`).
+   - **2 During payment**: Generates HMAC-SHA256 signed DemoPay links and `300×300` ZXing QR PNGs (`https://.../pay-demo.html?p=...&s=...`, never real UPI deep links), plus an interactive tamper test and standalone customer verification page (`pay-demo.html`).
+   - **3 After payment**: Issues SHA-256 hash-chained `DEMO-...` receipts stored locally in `uss.trail` (`localStorage`) with one-click trail verification and tamper demonstration.
 
 ---
 
@@ -93,15 +108,12 @@ The machine-learning pipeline trains on real and synthetic cybersecurity dataset
   - **Confusion Matrix:** `TN: 971 | FP: 0 | FN: 17 | TP: 157`
 
 #### 2. Malicious URL Classifier (`ml/train_url.py`)
-- **Dataset:** 200 URLs (100 synthetic safe URLs across genuine Indian banking, government, and utility domains + 100 synthetic malicious phishing, IP, and abuse TLD URLs).
+- **Dataset:** **200 synthetic URLs** (`ml/data/urls.csv`: 100 synthetic safe URLs + 100 synthetic malicious URLs).
 - **Features Extracted (in order):** `url_length`, `dot_count`, `hyphen_count`, `digit_count`, `entropy`, `has_ip_host`, `suspicious_tld`, `uses_https`, `subdomain_count`.
 - **Scaler & Classifier:** `StandardScaler` + `LogisticRegression(C=1.5, max_iter=1000, random_state=42)`.
-- **Evaluation (20% Stratified Test Split: 40 URLs):**
-  - **Accuracy:** `100.00%` (1.0000)
-  - **Precision:** `100.00%` (1.0000)
-  - **Recall:** `100.00%` (1.0000)
-  - **F1 Score:** `100.00%` (1.0000)
-  - **Confusion Matrix:** `TN: 20 | FP: 0 | FN: 0 | TP: 20`
+- **Evaluation (20% Stratified Test Split: 40 synthetic URLs):**
+  - **Accuracy:** `100.00%` on the 40 synthetic split URLs (**no real-world accuracy claim** — synthetic dataset only).
+  - **Precision / Recall / F1:** `100.00%` on the synthetic split (`TN: 20 | FP: 0 | FN: 0 | TP: 20`).
 
 ### Zero-Python Runtime Parity
 The Java classifiers (`TextClassifier`, `UrlFeatureExtractor`, and `UrlClassifier`) replicate scikit-learn's floating-point math directly:
@@ -165,16 +177,29 @@ java -version
 # Windows (PowerShell):
 .\mvnw.cmd spring-boot:run
 ```
-The application will launch at `http://localhost:8080`.
+Open `http://localhost:8080` (or `http://localhost:8080/?present=1` for the collapsible presenter shortcuts).
 
-### 3. Build & Run Standalone Executable JAR
+### 3. Live LAN / Mobile Hotspot Demo Script (Windows)
+```powershell
+.\run-demo.ps1
+```
+Builds `target/cybershield-0.0.1-SNAPSHOT.jar` if missing or stale, detects your laptop's LAN IPv4 address, sets `PUBLIC_BASE_URL=http://<lan-ip>:8080`, starts the server, and prints the mobile URL for phones on the same Wi-Fi/hotspot.
+
+### 4. Build & Run Standalone Executable JAR
 ```bash
 # Package into executable fat JAR
-./mvnw clean package
+./mvnw clean package -DskipTests
 
 # Run JAR with zero dependencies (no Python needed)
 java -jar target/cybershield-0.0.1-SNAPSHOT.jar
 ```
+
+### Environment Variables
+| Variable | Default | Purpose |
+| :--- | :--- | :--- |
+| `PORT` | `8080` | HTTP port bound by Spring Boot (`server.port=${PORT:8080}`). |
+| `SIGNING_SECRET` | *(32 random bytes at startup)* | HMAC-SHA256 key for signing Verify QR tokens and chained receipts. Never logged or hard-coded. |
+| `PUBLIC_BASE_URL` | *(derived from request host)* | Base URL used when generating signed `/pay-demo.html?p=...&s=...` links & QR codes (e.g. `http://192.168.1.42:8080` or `https://your-app.onrender.com`). |
 
 ---
 
@@ -314,7 +339,7 @@ All heuristic data, keywords, thresholds, and weights live in [`src/main/resourc
 
 ## Running Tests
 
-Execute the full suite of 168 tests covering detectors, scoring math, integration endpoints, ML parity, and security:
+Execute the full suite of **188 JUnit tests** covering detectors, scoring math, Check/Verify endpoints, ML parity, scenario/i18n validation, robustness, and security headers:
 
 ```bash
 # Run all tests
@@ -334,11 +359,13 @@ Execute the full suite of 168 tests covering detectors, scoring math, integratio
 
 ## Known Limitations
 
-1. **Heuristic Estimate, Not a Guarantee:** Cyber Shield provides a statistical and heuristic risk estimate. It is not an absolute warranty that an unflagged message is safe, nor that a flagged message is malicious.
-2. **Synthetic Indian Scam Dataset:** While real scam patterns were used to model Indian fraud campaigns (digital arrest scripts, electricity bill APK scams, KYC cutoff baits), the labeled dataset (`ml/data/indian_scams.csv`) contains 150 synthetic examples.
-3. **SMS Dataset Demographics:** The UCI SMS Spam dataset primarily reflects English SMS spam collected in the United Kingdom and Singapore; linguistic patterns may differ from colloquial Hinglish or regional Indian messaging styles.
-4. **Novel Scam Wording:** Scammers frequently alter terminology, use zero-width spaces, or adopt homoglyphs. Completely novel lures not captured in `rules.json` or model training may score lower than expected.
-5. **No Live URL Reputation Checks:** In strict adherence to the zero-network-connection guarantee, Cyber Shield never connects to remote servers, follows HTTP redirects, or queries live DNS/WHOIS databases.
+1. **Heuristic Estimate, Not a Guarantee:** Cyber Shield provides a statistical and heuristic risk estimate. It is not an absolute warranty that an unflagged message has no risk, nor that a flagged message is malicious.
+2. **ML Training Data Limits:**
+   - The **Text Classifier** was trained on 5,574 UCI SMS Spam messages plus 150 synthetic Indian scam examples (`ml/data/indian_scams.csv`), and has sparse coverage for regional scripts outside English.
+   - The **URL Classifier** was trained on **200 synthetic URLs** (`ml/data/urls.csv`) and makes **no real-world accuracy claim** on unseen production domains.
+3. **Rule Coverage:** Novel scam phrasing, homoglyphs, or zero-width obfuscation not yet covered in `rules.json` may score lower.
+4. **No Live URL Reputation Checks:** In strict adherence to the zero-network-connection guarantee, Cyber Shield never connects to remote servers, follows HTTP redirects, or queries live DNS/WHOIS databases.
+5. **Verify Simulator Scope:** Verify demonstrates cryptographic receiver checks, HMAC-signed QR payloads, and hash-chained receipts against 5 fictional `Demo Bank` merchants (`DEMO: no real money`). Real-world adoption requires issuance by a merchant's bank or payment service provider.
 
 ---
 

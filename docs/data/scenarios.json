@@ -1,0 +1,812 @@
+[
+  {
+    "id": "collect-request",
+    "scamType": "COLLECT_REQUEST",
+    "channel": "payment",
+    "message": {
+      "en": "Cashback Team is requesting Rs.500. Enter your UPI PIN to receive the money.",
+      "kn": "ಕ್ಯಾಶ್‌ಬ್ಯಾಕ್ ಟೀಮ್ ನಿಮ್ಮಿಂದ ರೂ.500 ಕೇಳುತ್ತಿದೆ. ಹಣ ಪಡೆಯಲು ನಿಮ್ಮ UPI ಪಿನ್ ನಮೂದಿಸಿ.",
+      "hi": "कैशबैक टीम आपसे रु.500 मांग रही है। पैसे पाने के लिए अपना UPI पिन डालें।"
+    },
+    "redFlags": {
+      "en": [
+        "requesting Rs.500",
+        "Enter your UPI PIN to receive"
+      ],
+      "kn": [
+        "ರೂ.500 ಕೇಳುತ್ತಿದೆ",
+        "ಹಣ ಪಡೆಯಲು ನಿಮ್ಮ UPI ಪಿನ್ ನಮೂದಿಸಿ"
+      ],
+      "hi": [
+        "रु.500 मांग रही है",
+        "पैसे पाने के लिए अपना UPI पिन डालें"
+      ]
+    },
+    "options": [
+      {
+        "id": "decline",
+        "correct": true,
+        "label": {
+          "en": "Decline",
+          "kn": "ತಿರಸ್ಕರಿಸಿ (Decline)",
+          "hi": "मना करें (Decline)"
+        },
+        "feedback": {
+          "en": "Smart move! That was a Collect Request, which pulls money out of your Demo Bank account instead of sending cashback.",
+          "kn": "ಸರಿಯಾದ ನಿರ್ಧಾರ! ಇದು ಕ್ಯಾಶ್‌ಬ್ಯಾಕ್ ಕಳುಹಿಸುವ ಬದಲು ನಿಮ್ಮ ಡೆಮೊ ಬ್ಯಾಂಕ್ ಖಾತೆಯಿಂದ ಹಣ ಕಡಿತಗೊಳಿಸುವ 'ಕಲೆಕ್ಟ್ ರಿಕ್ವೆಸ್ಟ್' ಆಗಿತ್ತು.",
+          "hi": "सही फैसला! यह कैशबैक भेजने के बजाय आपके डेमो बैंक खाते से पैसे काटने वाली 'कलेक्ट रिक्वेस्ट' थी।"
+        }
+      },
+      {
+        "id": "enter-pin",
+        "correct": false,
+        "label": {
+          "en": "Enter PIN",
+          "kn": "UPI ಪಿನ್ ನಮೂದಿಸಿ",
+          "hi": "UPI पिन डालें"
+        },
+        "feedback": {
+          "en": "You lost Rs.500! Entering your UPI PIN always authorises money leaving your Demo Bank account.",
+          "kn": "ನೀವು ರೂ.500 ಕಳೆದುಕೊಂಡಿರಿ! UPI ಪಿನ್ ನಮೂದಿಸಿದರೆ ನಿಮ್ಮ ಡೆಮೊ ಬ್ಯಾಂಕ್ ಖಾತೆಯಿಂದ ಹಣ ಹೊರಹೋಗುತ್ತದೆ.",
+          "hi": "आपके रु.500 कट गए! UPI पिन डालने से हमेशा आपके डेमो बैंक खाते से पैसे बाहर जाते हैं।"
+        },
+        "consequence": {
+          "amountBefore": 8500,
+          "amountAfter": 8000,
+          "note": {
+            "en": "DEMO: no real money. Rs.500 debited from Demo Bank via fake cashback collect request.",
+            "kn": "DEMO: ನಿಜವಾದ ಹಣವಲ್ಲ. ನಕಲಿ ಕ್ಯಾಶ್‌ಬ್ಯಾಕ್ ರಿಕ್ವೆಸ್ಟ್‌ನಿಂದ ಡೆಮೊ ಬ್ಯಾಂಕ್‌ನಿಂದ ರೂ.500 ಕಡಿತಗೊಂಡಿದೆ.",
+            "hi": "DEMO: असली पैसे नहीं। नकली कैशबैक रिक्वेस्ट से डेमो बैंक से रु.500 कट गए।"
+          }
+        }
+      },
+      {
+        "id": "approve",
+        "correct": false,
+        "label": {
+          "en": "Approve",
+          "kn": "ಒಪ್ಪಿಕೊಳ್ಳಿ (Approve)",
+          "hi": "मंजूर करें (Approve)"
+        },
+        "feedback": {
+          "en": "Approving a collect request starts a payment out of your DemoPay account, not an incoming credit.",
+          "kn": "ಕಲೆಕ್ಟ್ ರಿಕ್ವೆಸ್ಟ್ ಒಪ್ಪಿಕೊಂಡರೆ ನಿಮ್ಮ DemoPay ಖಾತೆಯಿಂದ ಹಣ ಪಾವತಿಯಾಗುತ್ತದೆ, ನಿಮಗೆ ಹಣ ಬರುವುದಿಲ್ಲ.",
+          "hi": "कलेक्ट रिक्वेस्ट मंजूर करने से आपके DemoPay खाते से पैसे जाते हैं, खाते में पैसे आते नहीं हैं।"
+        },
+        "consequence": {
+          "amountBefore": 8500,
+          "amountAfter": 8000,
+          "note": {
+            "en": "DEMO: no real money. Rs.500 debited after approving collect request in DemoPay.",
+            "kn": "DEMO: ನಿಜವಾದ ಹಣವಲ್ಲ. DemoPay ನಲ್ಲಿ ರಿಕ್ವೆಸ್ಟ್ ಒಪ್ಪಿಕೊಂಡಿದ್ದರಿಂದ ರೂ.500 ಕಡಿತಗೊಂಡಿದೆ.",
+            "hi": "DEMO: असली पैसे नहीं। DemoPay में रिक्वेस्ट मंजूर करने से रु.500 कट गए।"
+          }
+        }
+      }
+    ],
+    "rule": {
+      "en": "You never enter a PIN to receive money.",
+      "kn": "ಹಣ ಪಡೆಯಲು ನೀವು ಎಂದಿಗೂ ಪಿನ್ ನಮೂದಿಸಬೇಕಾಗಿಲ್ಲ.",
+      "hi": "पैसे पाने के लिए आपको कभी भी पिन नहीं डालना पड़ता।"
+    }
+  },
+  {
+    "id": "refund-call",
+    "scamType": "SCREEN_SHARE_REFUND",
+    "channel": "call",
+    "message": {
+      "en": "Caller: Sir, your delivery refund of Rs.1,200 is stuck. Install the support app and share your screen so I can fix it quickly, do it now.",
+      "kn": "ಕರೆ ಮಾಡಿದವರು: ಸರ್, ನಿಮ್ಮ ರೂ.1,200 ಡೆಲಿವರಿ ರೀಫಂಡ್ ಸಿಕ್ಕಿಹಾಕಿಕೊಂಡಿದೆ. ತಕ್ಷಣ ಸರಿಪಡಿಸಲು ಸಪೋರ್ಟ್ ಆ್ಯಪ್ ಇನ್‌ಸ್ಟಾಲ್ ಮಾಡಿ ಮತ್ತು ನಿಮ್ಮ ಸ್ಕ್ರೀನ್ ಶೇರ್ ಮಾಡಿ, ಈಗಲೇ ಮಾಡಿ.",
+      "hi": "कॉल करने वाला: सर, आपका रु.1,200 का डिलीवरी रिफंड अटका हुआ है। मैं इसे जल्दी ठीक कर सकूं, इसलिए सपोर्ट ऐप इंस्टॉल करें और स्क्रीन शेयर करें, अभी करें।"
+    },
+    "redFlags": {
+      "en": [
+        "Install the support app",
+        "share your screen",
+        "do it now"
+      ],
+      "kn": [
+        "ಸಪೋರ್ಟ್ ಆ್ಯಪ್ ಇನ್‌ಸ್ಟಾಲ್ ಮಾಡಿ",
+        "ನಿಮ್ಮ ಸ್ಕ್ರೀನ್ ಶೇರ್ ಮಾಡಿ",
+        "ಈಗಲೇ ಮಾಡಿ"
+      ],
+      "hi": [
+        "सपोर्ट ऐप इंस्टॉल करें",
+        "स्क्रीन शेयर करें",
+        "अभी करें"
+      ]
+    },
+    "options": [
+      {
+        "id": "hang-up",
+        "correct": true,
+        "label": {
+          "en": "Hang up",
+          "kn": "ಕರೆ ಕಟ್ ಮಾಡಿ",
+          "hi": "कॉल काट दें"
+        },
+        "feedback": {
+          "en": "Correct! Legitimate support teams process refunds automatically and never ask you to install screen-sharing apps.",
+          "kn": "ಸರಿಯಾಗಿದೆ! ನಿಜವಾದ ಕಂಪನಿಗಳು ರೀಫಂಡ್ ಅನ್ನು ತಾವಾಗಿಯೇ ಮಾಡುತ್ತವೆ, ಸ್ಕ್ರೀನ್ ಶೇರ್ ಆ್ಯಪ್ ಇನ್‌ಸ್ಟಾಲ್ ಮಾಡಲು ಹೇಳುವುದಿಲ್ಲ.",
+          "hi": "बिल्कुल सही! असली कंपनियां रिफंड अपने आप करती हैं और कभी स्क्रीन-शेयरिंग ऐप इंस्टॉल करने को नहीं कहतीं।"
+        }
+      },
+      {
+        "id": "install-share",
+        "correct": false,
+        "label": {
+          "en": "Install the support app and share screen",
+          "kn": "ಸಪೋರ್ಟ್ ಆ್ಯಪ್ ಇನ್‌ಸ್ಟಾಲ್ ಮಾಡಿ ಸ್ಕ್ರೀನ್ ಶೇರ್ ಮಾಡಿ",
+          "hi": "सपोर्ट ऐप इंस्टॉल करें और स्क्रीन शेयर करें"
+        },
+        "feedback": {
+          "en": "Once you share your screen, the scammer reads your OTPs and empties your Demo Bank balance.",
+          "kn": "ನೀವು ಸ್ಕ್ರೀನ್ ಶೇರ್ ಮಾಡಿದ ತಕ್ಷಣ ವಂಚಕರು ನಿಮ್ಮ OTP ನೋಡಿ ಡೆಮೊ ಬ್ಯಾಂಕ್ ಖಾತೆಯಿಂದ ಹಣ ದೋಚುತ್ತಾರೆ.",
+          "hi": "स्क्रीन शेयर करते ही ठग आपके OTP देख लेते हैं और आपके डेमो बैंक खाते से पैसे निकाल लेते हैं।"
+        },
+        "consequence": {
+          "amountBefore": 15000,
+          "amountAfter": 7500,
+          "note": {
+            "en": "DEMO: no real money. Rs.7,500 drained from Demo Bank while screen sharing was active.",
+            "kn": "DEMO: ನಿಜವಾದ ಹಣವಲ್ಲ. ಸ್ಕ್ರೀನ್ ಶೇರ್ ಚಾಲನೆಯಲ್ಲಿದ್ದಾಗ ಡೆಮೊ ಬ್ಯಾಂಕ್‌ನಿಂದ ರೂ.7,500 ಕಡಿತಗೊಂಡಿದೆ.",
+            "hi": "DEMO: असली पैसे नहीं। स्क्रीन शेयरिंग के दौरान डेमो बैंक खाते से रु.7,500 निकल गए।"
+          }
+        }
+      },
+      {
+        "id": "read-otp",
+        "correct": false,
+        "label": {
+          "en": "Refuse screen share but read out the refund OTP",
+          "kn": "ಸ್ಕ್ರೀನ್ ಶೇರ್ ಬೇಡ ಆದರೆ ರೀಫಂಡ್ OTP ಹೇಳಿ",
+          "hi": "स्क्रीन शेयर न करें पर रिफंड का OTP बता दें"
+        },
+        "feedback": {
+          "en": "There is no such thing as a 'refund OTP'. Reading out any OTP lets the caller authorise a payment from your account.",
+          "kn": "'ರೀಫಂಡ್ OTP' ಎಂಬುದೇ ಇರುವುದಿಲ್ಲ. ಯಾವುದೇ OTP ಹೇಳಿದರೆ ನಿಮ್ಮ ಖಾತೆಯಿಂದ ಹಣ ಕಡಿತವಾಗುತ್ತದೆ.",
+          "hi": "'रिफंड OTP' जैसा कुछ नहीं होता। कोई भी OTP बताने से आपके खाते से पैसे कट जाते हैं।"
+        },
+        "consequence": {
+          "amountBefore": 15000,
+          "amountAfter": 12000,
+          "note": {
+            "en": "DEMO: no real money. Rs.3,000 debited from Demo Bank after sharing OTP over phone.",
+            "kn": "DEMO: ನಿಜವಾದ ಹಣವಲ್ಲ. ಫೋನ್‌ನಲ್ಲಿ OTP ಹೇಳಿದ್ದರಿಂದ ಡೆಮೊ ಬ್ಯಾಂಕ್‌ನಿಂದ ರೂ.3,000 ಕಡಿತಗೊಂಡಿದೆ.",
+            "hi": "DEMO: असली पैसे नहीं। फोन पर OTP बताने से डेमो बैंक से रु.3,000 कट गए।"
+          }
+        }
+      }
+    ],
+    "rule": {
+      "en": "Real companies never ask for screen sharing.",
+      "kn": "ನಿಜವಾದ ಕಂಪನಿಗಳು ಎಂದಿಗೂ ಸ್ಕ್ರೀನ್ ಶೇರ್ ಮಾಡಲು ಕೇಳುವುದಿಲ್ಲ.",
+      "hi": "असली कंपनियां कभी भी स्क्रीन शेयर करने को नहीं कहतीं।"
+    }
+  },
+  {
+    "id": "qr-receive",
+    "scamType": "QR_SCAM",
+    "channel": "whatsapp",
+    "message": {
+      "en": "Buyer: I have sent the advance. Scan this QR code and enter your PIN to receive Rs.2,000.",
+      "kn": "ಖರೀದಿದಾರ: ನಾನು ಮುಂಗಡ ಹಣ ಕಳುಹಿಸಿದ್ದೇನೆ. ಈ QR ಕೋಡ್ ಸ್ಕ್ಯಾನ್ ಮಾಡಿ ಮತ್ತು ರೂ.2,000 ಪಡೆಯಲು ನಿಮ್ಮ ಪಿನ್ ನಮೂದಿಸಿ.",
+      "hi": "खरीदार: मैंने एडवांस भेज दिया है। यह QR कोड स्कैन करें और रु.2,000 पाने के लिए अपना पिन डालें।"
+    },
+    "redFlags": {
+      "en": [
+        "Scan this QR code",
+        "enter your PIN to receive"
+      ],
+      "kn": [
+        "ಈ QR ಕೋಡ್ ಸ್ಕ್ಯಾನ್ ಮಾಡಿ",
+        "ಪಡೆಯಲು ನಿಮ್ಮ ಪಿನ್ ನಮೂದಿಸಿ"
+      ],
+      "hi": [
+        "यह QR कोड स्कैन करें",
+        "पाने के लिए अपना पिन डालें"
+      ]
+    },
+    "options": [
+      {
+        "id": "dont-scan",
+        "correct": true,
+        "label": {
+          "en": "Don't scan",
+          "kn": "ಸ್ಕ್ಯಾನ್ ಮಾಡಬೇಡಿ",
+          "hi": "स्कैन न करें"
+        },
+        "feedback": {
+          "en": "Well spotted! Receiving money on DemoPay is automatic; you never scan a QR code or enter a PIN to get paid.",
+          "kn": "ಒಳ್ಳೆಯ ಕೆಲಸ! DemoPay ನಲ್ಲಿ ಹಣ ಪಡೆಯಲು QR ಸ್ಕ್ಯಾನ್ ಮಾಡುವ ಅಥವಾ ಪಿನ್ ಹಾಕುವ ಅಗತ್ಯವಿರುವುದಿಲ್ಲ.",
+          "hi": "शाबाश! DemoPay पर पैसे पाने के लिए कभी QR कोड स्कैन करने या पिन डालने की जरूरत नहीं होती।"
+        }
+      },
+      {
+        "id": "scan-and-pin",
+        "correct": false,
+        "label": {
+          "en": "Scan QR and enter PIN",
+          "kn": "QR ಸ್ಕ್ಯಾನ್ ಮಾಡಿ ಪಿನ್ ನಮೂದಿಸಿ",
+          "hi": "QR स्कैन करें और पिन डालें"
+        },
+        "feedback": {
+          "en": "The QR code was a payment link to the buyer's account! You just paid Rs.2,000 instead of receiving it.",
+          "kn": "ಆ QR ಕೋಡ್ ಖರೀದಿದಾರರಿಗೆ ಹಣ ಕಳುಹಿಸುವ ಲಿಂಕ್ ಆಗಿತ್ತು! ಹಣ ಬರುವ ಬದಲು ನಿಮ್ಮಿಂದ ರೂ.2,000 ಕಡಿತವಾಯಿತು.",
+          "hi": "वह QR कोड खरीदार को पैसे भेजने का था! पैसे मिलने के बजाय आपके खाते से रु.2,000 कट गए।"
+        },
+        "consequence": {
+          "amountBefore": 9400,
+          "amountAfter": 7400,
+          "note": {
+            "en": "DEMO: no real money. Rs.2,000 sent out of DemoPay after scanning scammer's QR.",
+            "kn": "DEMO: ನಿಜವಾದ ಹಣವಲ್ಲ. ವಂಚಕರ QR ಸ್ಕ್ಯಾನ್ ಮಾಡಿದ್ದರಿಂದ DemoPay ನಿಂದ ರೂ.2,000 ಕಡಿತಗೊಂಡಿದೆ.",
+            "hi": "DEMO: असली पैसे नहीं। ठग का QR स्कैन करने से DemoPay से रु.2,000 कट गए।"
+          }
+        }
+      },
+      {
+        "id": "scan-test-re1",
+        "correct": false,
+        "label": {
+          "en": "Scan and send Re.1 to test",
+          "kn": "ಪರೀಕ್ಷಿಸಲು QR ಸ್ಕ್ಯಾನ್ ಮಾಡಿ ರೂ.1 ಕಳುಹಿಸಿ",
+          "hi": "जांचने के लिए QR स्कैन करके रु.1 भेजें"
+        },
+        "feedback": {
+          "en": "Never scan an unknown QR code to 'receive' money or test a transaction.",
+          "kn": "ಹಣ ಪಡೆಯಲು ಅಥವಾ ಪರೀಕ್ಷಿಸಲು ಅಪರಿಚಿತ QR ಸ್ಕ್ಯಾನ್ ಮಾಡಬೇಡಿ.",
+          "hi": "पैसे पाने या जांचने के लिए कभी अनजान QR स्कैन न करें।"
+        },
+        "consequence": {
+          "amountBefore": 9400,
+          "amountAfter": 9399,
+          "note": {
+            "en": "DEMO: no real money. Re.1 sent to scammer's QR in DemoPay.",
+            "kn": "DEMO: ನಿಜವಾದ ಹಣವಲ್ಲ. DemoPay ನಲ್ಲಿ ವಂಚಕರ QR ಗೆ ರೂ.1 ಕಡಿತಗೊಂಡಿದೆ.",
+            "hi": "DEMO: असली पैसे नहीं। DemoPay में ठग के QR पर रु.1 कट गया।"
+          }
+        }
+      }
+    ],
+    "rule": {
+      "en": "Scanning a QR is for paying, not receiving.",
+      "kn": "QR ಕೋಡ್ ಸ್ಕ್ಯಾನ್ ಮಾಡುವುದು ಹಣ ಪಾವತಿಸಲು ಮಾತ್ರ, ಪಡೆಯಲು ಅಲ್ಲ.",
+      "hi": "QR कोड स्कैन करना पैसे देने के लिए होता है, पैसे पाने के लिए नहीं।"
+    }
+  },
+  {
+    "id": "kyc-sms",
+    "scamType": "KYC_PHISHING",
+    "channel": "sms",
+    "message": {
+      "en": "BANK-ALERT: Dear Customer, your KYC expires today. Update now or your account will be blocked: upi-kyc-in.top",
+      "kn": "BANK-ALERT: ಪ್ರಿಯ ಗ್ರಾಹಕರೇ, ನಿಮ್ಮ KYC ಇಂದೇ ಮುಕ್ತಾಯಗೊಳ್ಳುತ್ತದೆ. ಈಗಲೇ ಅಪ್‌ಡೇಟ್ ಮಾಡಿ ಇಲ್ಲದಿದ್ದರೆ ನಿಮ್ಮ ಖಾತೆ ಬ್ಲಾಕ್ ಆಗುತ್ತದೆ: upi-kyc-in.top",
+      "hi": "BANK-ALERT: प्रिय ग्राहक, आपका KYC आज खत्म हो रहा है। अभी अपडेट करें वरना आपका खाता बंद हो जाएगा: upi-kyc-in.top"
+    },
+    "redFlags": {
+      "en": [
+        "expires today",
+        "blocked",
+        "upi-kyc-in.top"
+      ],
+      "kn": [
+        "ಇಂದೇ ಮುಕ್ತಾಯಗೊಳ್ಳುತ್ತದೆ",
+        "ಬ್ಲಾಕ್ ಆಗುತ್ತದೆ",
+        "upi-kyc-in.top"
+      ],
+      "hi": [
+        "आज खत्म हो रहा है",
+        "खाता बंद हो जाएगा",
+        "upi-kyc-in.top"
+      ]
+    },
+    "options": [
+      {
+        "id": "check-official",
+        "correct": true,
+        "label": {
+          "en": "Ignore and check in the official app",
+          "kn": "ನಿರ್ಲಕ್ಷಿಸಿ ಮತ್ತು ಅಧಿಕೃತ ಆ್ಯಪ್‌ನಲ್ಲಿ ಪರಿಶೀಲಿಸಿ",
+          "hi": "ध्यान न दें और आधिकारिक ऐप में जांचें"
+        },
+        "feedback": {
+          "en": "Right choice! Checking inside the official Demo Bank app confirms whether KYC is actually due—without risking your credentials.",
+          "kn": "ಸರಿಯಾದ ಆಯ್ಕೆ! ಅಧಿಕೃತ ಡೆಮೊ ಬ್ಯಾಂಕ್ ಆ್ಯಪ್‌ನಲ್ಲಿ ಪರಿಶೀಲಿಸುವುದರಿಂದ ನಿಮ್ಮ ಮಾಹಿತಿ ಸುರಕ್ಷಿತವಾಗಿರುತ್ತದೆ.",
+          "hi": "सही कदम! आधिकारिक डेमो बैंक ऐप में जांचने से आपकी जानकारी सुरक्षित रहती है।"
+        }
+      },
+      {
+        "id": "open-link",
+        "correct": false,
+        "label": {
+          "en": "Open the link",
+          "kn": "ಲಿಂಕ್ ತೆರೆಯಿರಿ",
+          "hi": "लिंक खोलें"
+        },
+        "feedback": {
+          "en": "The fake .top website stole your login details and OTP, draining Rs.6,000 from your Demo Bank account.",
+          "kn": "ನಕಲಿ .top ವೆಬ್‌ಸೈಟ್ ನಿಮ್ಮ ಲಾಗಿನ್ ವಿವರ ಮತ್ತು OTP ಕದ್ದು ಡೆಮೊ ಬ್ಯಾಂಕ್ ಖಾತೆಯಿಂದ ರೂ.6,000 ದೋಚಿದೆ.",
+          "hi": "नकली .top वेबसाइट ने आपका लॉगिन और OTP चुराकर डेमो बैंक खाते से रु.6,000 निकाल लिए।"
+        },
+        "consequence": {
+          "amountBefore": 12480,
+          "amountAfter": 6480,
+          "note": {
+            "en": "DEMO: no real money. Rs.6,000 debited from Demo Bank after opening fake KYC link.",
+            "kn": "DEMO: ನಿಜವಾದ ಹಣವಲ್ಲ. ನಕಲಿ KYC ಲಿಂಕ್ ತೆರೆದಿದ್ದರಿಂದ ಡೆಮೊ ಬ್ಯಾಂಕ್‌ನಿಂದ ರೂ.6,000 ಕಡಿತಗೊಂಡಿದೆ.",
+            "hi": "DEMO: असली पैसे नहीं। नकली KYC लिंक खोलने से डेमो बैंक से रु.6,000 कट गए।"
+          }
+        }
+      },
+      {
+        "id": "reply-sms",
+        "correct": false,
+        "label": {
+          "en": "Reply with Aadhaar and PAN details",
+          "kn": "ಆಧಾರ್ ಮತ್ತು ಪ್ಯಾನ್ ವಿವರಗಳೊಂದಿಗೆ ಉತ್ತರಿಸಿ",
+          "hi": "आधार और पैन नंबर भेजकर जवाब दें"
+        },
+        "feedback": {
+          "en": "Never reply to unknown SMS alerts with identity documents—scammers collect them for identity theft.",
+          "kn": "ಅಪರಿಚಿತ SMS ಗಳಿಗೆ ಆಧಾರ್ ಅಥವಾ ಪ್ಯಾನ್ ವಿವರ ಕಳುಹಿಸಬೇಡಿ—ವಂಚಕರು ಇದನ್ನು ದುರ್ಬಳಕೆ ಮಾಡಿಕೊಳ್ಳುತ್ತಾರೆ.",
+          "hi": "अनजान SMS पर कभी अपने आधार या पैन की जानकारी न भेजें—ठग इसका गलत इस्तेमाल करते हैं।"
+        }
+      }
+    ],
+    "rule": {
+      "en": "Banks don't send links to update KYC.",
+      "kn": "ಬ್ಯಾಂಕ್‌ಗಳು KYC ಅಪ್‌ಡೇಟ್ ಮಾಡಲು ಎಂದಿಗೂ ಲಿಂಕ್ ಕಳುಹಿಸುವುದಿಲ್ಲ.",
+      "hi": "बैंक KYC अपडेट करने के लिए कभी भी लिंक नहीं भेजते।"
+    }
+  },
+  {
+    "id": "wrong-transfer",
+    "scamType": "WRONG_TRANSFER",
+    "channel": "whatsapp",
+    "message": {
+      "en": "Stranger: Sorry, I sent Rs.5,000 to you by mistake. Please send it back to this number urgently.",
+      "kn": "ಅಪರಿಚಿತ: ಕ್ಷಮಿಸಿ, ನಾನು ತಪ್ಪಾಗಿ ನಿಮಗೆ ರೂ.5,000 ಕಳುಹಿಸಿದ್ದೇನೆ. ದಯವಿಟ್ಟು ತಕ್ಷಣ ಈ ನಂಬರ್‌ಗೆ ವಾಪಸ್ ಕಳುಹಿಸಿ.",
+      "hi": "अजनबी: माफ कीजिए, मैंने गलती से आपको रु.5,000 भेज दिए हैं। कृपया इस नंबर पर तुरंत वापस भेज दें।"
+    },
+    "redFlags": {
+      "en": [
+        "by mistake",
+        "send it back",
+        "urgently"
+      ],
+      "kn": [
+        "ತಪ್ಪಾಗಿ",
+        "ವಾಪಸ್ ಕಳುಹಿಸಿ",
+        "ತಕ್ಷಣ"
+      ],
+      "hi": [
+        "गलती से",
+        "वापस भेज दें",
+        "तुरंत"
+      ]
+    },
+    "options": [
+      {
+        "id": "report-bank",
+        "correct": true,
+        "label": {
+          "en": "Report to your bank",
+          "kn": "ನಿಮ್ಮ ಬ್ಯಾಂಕ್‌ಗೆ ತಿಳಿಸಿ",
+          "hi": "अपने बैंक को इसकी सूचना दें"
+        },
+        "feedback": {
+          "en": "Spot on! Scammers often send fake credit SMS or stolen funds that get reversed later. Let Demo Bank verify and handle any reversal.",
+          "kn": "ಸರಿಯಾದ ಹೆಜ್ಜೆ! ಹಲವು ಬಾರಿ ಆ ಮೆಸೇಜ್ ನಕಲಿಯಾಗಿರುತ್ತದೆ. ಡೆಮೊ ಬ್ಯಾಂಕ್ ಮೂಲಕವೇ ಪರಿಶೀಲಿಸಿ ಮತ್ತು ವಾಪಸ್ ನೀಡಿ.",
+          "hi": "सही कदम! अक्सर यह मैसेज नकली होता है या चोरी का पैसा होता है। हमेशा डेमो बैंक के जरिए ही इसकी जांच और वापसी कराएं।"
+        }
+      },
+      {
+        "id": "send-back",
+        "correct": false,
+        "label": {
+          "en": "Send Rs.5,000 back immediately",
+          "kn": "ತಕ್ಷಣ ರೂ.5,000 ವಾಪಸ್ ಕಳುಹಿಸಿ",
+          "hi": "तुरंत रु.5,000 वापस भेज दें"
+        },
+        "feedback": {
+          "en": "The incoming credit alert was fake! You just transferred Rs.5,000 of your own Demo Bank money to a scammer.",
+          "kn": "ಬಂದಿದ್ದ ಹಣದ ಮೆಸೇಜ್ ನಕಲಿಯಾಗಿತ್ತು! ನಿಮ್ಮ ಸ್ವಂತ ಡೆಮೊ ಬ್ಯಾಂಕ್ ಖಾತೆಯಿಂದ ರೂ.5,000 ವಂಚಕರಿಗೆ ಹೋಯಿತು.",
+          "hi": "पैसे आने का मैसेज नकली था! आपने अपने डेमो बैंक खाते से रु.5,000 ठग को भेज दिए।"
+        },
+        "consequence": {
+          "amountBefore": 14000,
+          "amountAfter": 9000,
+          "note": {
+            "en": "DEMO: no real money. Rs.5,000 lost sending money back on fake wrong-transfer claim.",
+            "kn": "DEMO: ನಿಜವಾದ ಹಣವಲ್ಲ. ನಕಲಿ ಮೆಸೇಜ್ ನಂಬಿ ರೂ.5,000 ಕಳೆದುಕೊಂಡಿದ್ದೀರಿ.",
+            "hi": "DEMO: असली पैसे नहीं। नकली गलत-ट्रांसफर दावे पर पैसे लौटाने से रु.5,000 गंवा दिए।"
+          }
+        }
+      },
+      {
+        "id": "send-half",
+        "correct": false,
+        "label": {
+          "en": "Send Rs.2,500 now and keep the rest",
+          "kn": "ಈಗ ರೂ.2,500 ಕಳುಹಿಸಿ ಉಳಿದದ್ದು ಇಟ್ಟುಕೊಳ್ಳಿ",
+          "hi": "अभी रु.2,500 भेज दें और बाकी रख लें"
+        },
+        "feedback": {
+          "en": "Never transfer any money to a stranger's number outside official bank channels—you still lose Rs.2,500.",
+          "kn": "ಅಧಿಕೃತ ಬ್ಯಾಂಕ್ ಪ್ರಕ್ರಿಯೆ ಇಲ್ಲದೆ ಅಪರಿಚಿತರಿಗೆ ಯಾವುದೇ ಹಣ ಕಳುಹಿಸಬೇಡಿ—ನೀವು ರೂ.2,500 ಕಳೆದುಕೊಳ್ಳುತ್ತೀರಿ.",
+          "hi": "आधिकारिक बैंक प्रक्रिया के बिना किसी अजनबी को कोई भी पैसा न भेजें—इससे आपके रु.2,500 डूब जाएंगे।"
+        },
+        "consequence": {
+          "amountBefore": 14000,
+          "amountAfter": 11500,
+          "note": {
+            "en": "DEMO: no real money. Rs.2,500 transferred to stranger via DemoPay.",
+            "kn": "DEMO: ನಿಜವಾದ ಹಣವಲ್ಲ. DemoPay ಮೂಲಕ ಅಪರಿಚಿತರಿಗೆ ರೂ.2,500 ವರ್ಗಾವಣೆಯಾಗಿದೆ.",
+            "hi": "DEMO: असली पैसे नहीं। DemoPay के जरिए अजनबी को रु.2,500 भेज दिए गए।"
+          }
+        }
+      }
+    ],
+    "rule": {
+      "en": "Return money only through the bank.",
+      "kn": "ತಪ್ಪಾಗಿ ಬಂದ ಹಣವನ್ನು ಬ್ಯಾಂಕ್ ಮೂಲಕ ಮಾತ್ರ ವಾಪಸ್ ನೀಡಿ.",
+      "hi": "गलती से आए पैसे केवल बैंक के माध्यम से ही वापस करें।"
+    }
+  },
+  {
+    "id": "fake-care",
+    "scamType": "FAKE_CUSTOMER_CARE",
+    "channel": "payment",
+    "message": {
+      "en": "Search result: PayEasy Customer Care 24x7. Call 90000 12345 for instant refund.",
+      "kn": "ಹುಡುಕಾಟದ ಫಲಿತಾಂಶ: PayEasy ಗ್ರಾಹಕ ಸೇವೆ 24x7. ತಕ್ಷಣದ ರೀಫಂಡ್‌ಗಾಗಿ 90000 12345 ಗೆ ಕರೆ ಮಾಡಿ.",
+      "hi": "सर्च रिजल्ट: PayEasy कस्टमर केयर 24x7। तुरंत रिफंड के लिए 90000 12345 पर कॉल करें।"
+    },
+    "redFlags": {
+      "en": [
+        "Customer Care 24x7",
+        "instant refund"
+      ],
+      "kn": [
+        "ಗ್ರಾಹಕ ಸೇವೆ 24x7",
+        "ತಕ್ಷಣದ ರೀಫಂಡ್"
+      ],
+      "hi": [
+        "कस्टमर केयर 24x7",
+        "तुरंत रिफंड"
+      ]
+    },
+    "options": [
+      {
+        "id": "in-app-help",
+        "correct": true,
+        "label": {
+          "en": "Use in-app help only",
+          "kn": "ಆ್ಯಪ್‌ನ ಒಳಗಿರುವ ಸಹಾಯ ವಿಭಾಗವನ್ನು ಮಾತ್ರ ಬಳಸಿ",
+          "hi": "केवल ऐप के अंदर मौजूद हेल्प सेक्शन का उपयोग करें"
+        },
+        "feedback": {
+          "en": "Wise choice! Scammers plant fake phone numbers in search results. Always raise support tickets inside DemoPay or the official app.",
+          "kn": "ಬುದ್ಧಿವಂತ ನಿರ್ಧಾರ! ವಂಚಕರು ಸರ್ಚ್ ಫಲಿತಾಂಶಗಳಲ್ಲಿ ನಕಲಿ ನಂಬರ್ ಹಾಕುತ್ತಾರೆ. ಯಾವಾಗಲೂ ಅಧಿಕೃತ ಆ್ಯಪ್‌ನ ಹೆಲ್ಪ್ ಬಳಸಿ.",
+          "hi": "समझदारी भरा कदम! ठग सर्च रिजल्ट में नकली नंबर डाल देते हैं। हमेशा DemoPay या आधिकारिक ऐप के अंदर से ही मदद लें।"
+        }
+      },
+      {
+        "id": "call-number",
+        "correct": false,
+        "label": {
+          "en": "Call 90000 12345 for refund",
+          "kn": "ರೀಫಂಡ್‌ಗಾಗಿ 90000 12345 ಗೆ ಕರೆ ಮಾಡಿ",
+          "hi": "रिफंड के लिए 90000 12345 पर कॉल करें"
+        },
+        "feedback": {
+          "en": "That number belongs to a scammer who tricks callers into approving a debit or sharing card details.",
+          "kn": "ಆ ನಂಬರ್ ವಂಚಕರದ್ದಾಗಿದೆ; ಅವರು ಕರೆ ಮಾಡಿದವರನ್ನು ನಂಬಿಸಿ ಹಣ ಕಡಿತಗೊಳಿಸುತ್ತಾರೆ.",
+          "hi": "वह नंबर ठगों का है; वे कॉल करने वालों को झांसा देकर पैसे कटवा लेते हैं।"
+        },
+        "consequence": {
+          "amountBefore": 11200,
+          "amountAfter": 7200,
+          "note": {
+            "en": "DEMO: no real money. Rs.4,000 lost after calling fake search-result helpline.",
+            "kn": "DEMO: ನಿಜವಾದ ಹಣವಲ್ಲ. ನಕಲಿ ಸಹಾಯವಾಣಿಗೆ ಕರೆ ಮಾಡಿದ್ದರಿಂದ ರೂ.4,000 ಕಡಿತಗೊಂಡಿದೆ.",
+            "hi": "DEMO: असली पैसे नहीं। सर्च रिजल्ट के नकली हेल्पलाइन पर कॉल करने से रु.4,000 कट गए।"
+          }
+        }
+      },
+      {
+        "id": "whatsapp-details",
+        "correct": false,
+        "label": {
+          "en": "Message your card and PIN on WhatsApp to 90000 12345",
+          "kn": "90000 12345 ಗೆ WhatsApp ನಲ್ಲಿ ಕಾರ್ಡ್ ಮತ್ತು ಪಿನ್ ಕಳುಹಿಸಿ",
+          "hi": "90000 12345 पर WhatsApp में कार्ड और पिन भेजें"
+        },
+        "feedback": {
+          "en": "Never message card, OTP, or PIN details to any unverified phone number found online.",
+          "kn": "ಆನ್‌ಲೈನ್‌ನಲ್ಲಿ ಸಿಗುವ ಪರಿಶೀಲಿಸದ ನಂಬರ್‌ಗೆ ಕಾರ್ಡ್, OTP ಅಥವಾ ಪಿನ್ ವಿವರ ಕಳುಹಿಸಬೇಡಿ.",
+          "hi": "ऑनलाइन मिले किसी अनजान नंबर पर कभी भी कार्ड, OTP या पिन की जानकारी न भेजें।"
+        },
+        "consequence": {
+          "amountBefore": 11200,
+          "amountAfter": 9200,
+          "note": {
+            "en": "DEMO: no real money. Rs.2,000 debited from Demo Bank after sharing details on WhatsApp.",
+            "kn": "DEMO: ನಿಜವಾದ ಹಣವಲ್ಲ. WhatsApp ನಲ್ಲಿ ವಿವರ ಹಂಚಿಕೊಂಡಿದ್ದರಿಂದ ಡೆಮೊ ಬ್ಯಾಂಕ್‌ನಿಂದ ರೂ.2,000 ಕಡಿತಗೊಂಡಿದೆ.",
+            "hi": "DEMO: असली पैसे नहीं। WhatsApp पर विवरण साझा करने से डेमो बैंक से रु.2,000 कट गए।"
+          }
+        }
+      }
+    ],
+    "rule": {
+      "en": "Never trust numbers from search results.",
+      "kn": "ಸರ್ಚ್ ಫಲಿತಾಂಶಗಳಲ್ಲಿ ಸಿಗುವ ಕಸ್ಟಮರ್ ಕೇರ್ ನಂಬರ್‌ಗಳನ್ನು ನಂಬಬೇಡಿ.",
+      "hi": "सर्च रिजल्ट में मिलने वाले कस्टमर केयर नंबरों पर कभी भरोसा न करें।"
+    }
+  },
+  {
+    "id": "lottery-fee",
+    "scamType": "LOTTERY_FEE",
+    "channel": "whatsapp",
+    "message": {
+      "en": "Congratulations! You won Rs.50,000. Pay a Rs.199 processing fee to claim your prize: bit.ly/claim-win",
+      "kn": "ಅಭಿನಂದನೆಗಳು! ನೀವು ರೂ.50,000 ಗೆದ್ದಿದ್ದೀರಿ. ನಿಮ್ಮ ಬಹುಮಾನ ಪಡೆಯಲು ರೂ.199 ಪ್ರೊಸೆಸಿಂಗ್ ಶುಲ್ಕ ಪಾವತಿಸಿ: bit.ly/claim-win",
+      "hi": "बधाई हो! आप रु.50,000 जीत गए हैं। अपना इनाम पाने के लिए रु.199 प्रोसेसिंग फीस भरें: bit.ly/claim-win"
+    },
+    "redFlags": {
+      "en": [
+        "You won",
+        "Pay a Rs.199 processing fee",
+        "bit.ly/claim-win"
+      ],
+      "kn": [
+        "ನೀವು ರೂ.50,000 ಗೆದ್ದಿದ್ದೀರಿ",
+        "ರೂ.199 ಪ್ರೊಸೆಸಿಂಗ್ ಶುಲ್ಕ ಪಾವತಿಸಿ",
+        "bit.ly/claim-win"
+      ],
+      "hi": [
+        "आप रु.50,000 जीत गए हैं",
+        "रु.199 प्रोसेसिंग फीस भरें",
+        "bit.ly/claim-win"
+      ]
+    },
+    "options": [
+      {
+        "id": "ignore",
+        "correct": true,
+        "label": {
+          "en": "Ignore",
+          "kn": "ನಿರ್ಲಕ್ಷಿಸಿ",
+          "hi": "अनदेखा करें"
+        },
+        "feedback": {
+          "en": "Great! You cannot win a prize you never entered for, and real prizes never ask for an upfront processing fee.",
+          "kn": "ಸರಿಯಾಗಿದೆ! ನೀವು ಭಾಗವಹಿಸದ ಲಾಟರಿ ಗೆಲ್ಲಲು ಸಾಧ್ಯವಿಲ್ಲ, ಮತ್ತು ನಿಜವಾದ ಬಹುಮಾನಕ್ಕೆ ಮುಂಗಡ ಶುಲ್ಕ ಕೇಳುವುದಿಲ್ಲ.",
+          "hi": "बिल्कुल सही! जिस प्रतियोगिता में आपने भाग नहीं लिया उसका इनाम नहीं मिल सकता, और असली इनाम के लिए पहले पैसे नहीं मांगते।"
+        }
+      },
+      {
+        "id": "pay-fee",
+        "correct": false,
+        "label": {
+          "en": "Pay the Rs.199 processing fee",
+          "kn": "ರೂ.199 ಪ್ರೊಸೆಸಿಂಗ್ ಶುಲ್ಕ ಪಾವತಿಸಿ",
+          "hi": "रु.199 प्रोसेसिंग फीस भरें"
+        },
+        "feedback": {
+          "en": "There is no Rs.50,000 prize! Once you pay Rs.199, scammers keep demanding more 'tax' and 'verification' fees.",
+          "kn": "ಯಾವುದೇ ರೂ.50,000 ಬಹುಮಾನವಿಲ್ಲ! ರೂ.199 ಪಾವತಿಸಿದ ನಂತರ 'ಟ್ಯಾಕ್ಸ್' ಹೆಸರಿನಲ್ಲಿ ಇನ್ನಷ್ಟು ಹಣ ಕೇಳುತ್ತಾರೆ.",
+          "hi": "कोई रु.50,000 का इनाम नहीं है! रु.199 देने के बाद वे 'टैक्स' के नाम पर और पैसे मांगते रहेंगे।"
+        },
+        "consequence": {
+          "amountBefore": 5000,
+          "amountAfter": 4801,
+          "note": {
+            "en": "DEMO: no real money. Rs.199 lost on fake prize processing fee.",
+            "kn": "DEMO: ನಿಜವಾದ ಹಣವಲ್ಲ. ನಕಲಿ ಬಹುಮಾನ ಶುಲ್ಕಕ್ಕಾಗಿ ರೂ.199 ಕಳೆದುಕೊಂಡಿದ್ದೀರಿ.",
+            "hi": "DEMO: असली पैसे नहीं। नकली इनाम की प्रोसेसिंग फीस में रु.199 डूब गए।"
+          }
+        }
+      },
+      {
+        "id": "open-short-link",
+        "correct": false,
+        "label": {
+          "en": "Open bit.ly/claim-win and enter PIN",
+          "kn": "bit.ly/claim-win ತೆರೆದು ಪಿನ್ ನಮೂದಿಸಿ",
+          "hi": "bit.ly/claim-win खोलें और पिन डालें"
+        },
+        "feedback": {
+          "en": "Shortened links hide phishing sites built to steal your DemoPay PIN or Demo Bank login.",
+          "kn": "ಸಣ್ಣ ಲಿಂಕ್‌ಗಳು ನಿಮ್ಮ DemoPay ಪಿನ್ ಅಥವಾ ಡೆಮೊ ಬ್ಯಾಂಕ್ ಲಾಗಿನ್ ಕದಿಯುವ ನಕಲಿ ಪುಟಗಳಿಗೆ ಕರೆದೊಯ್ಯುತ್ತವೆ.",
+          "hi": "शॉर्ट लिंक आपका DemoPay पिन या डेमो बैंक लॉगिन चुराने वाली नकली वेबसाइट पर ले जाते हैं।"
+        },
+        "consequence": {
+          "amountBefore": 5000,
+          "amountAfter": 2500,
+          "note": {
+            "en": "DEMO: no real money. Rs.2,500 drained via phishing page behind short link.",
+            "kn": "DEMO: ನಿಜವಾದ ಹಣವಲ್ಲ. ಶಾರ್ಟ್ ಲಿಂಕ್ ಹಿಂದಿನ ನಕಲಿ ಪುಟದಿಂದ ರೂ.2,500 ಕಡಿತಗೊಂಡಿದೆ.",
+            "hi": "DEMO: असली पैसे नहीं। शॉर्ट लिंक के पीछे छिपे नकली पेज से रु.2,500 निकल गए।"
+          }
+        }
+      }
+    ],
+    "rule": {
+      "en": "Real prizes and jobs never charge a fee.",
+      "kn": "ನಿಜವಾದ ಬಹುಮಾನಗಳು ಮತ್ತು ಉದ್ಯೋಗಗಳಿಗೆ ಎಂದಿಗೂ ಶುಲ್ಕವಿರುವುದಿಲ್ಲ.",
+      "hi": "असली इनाम और नौकरियों के लिए कभी कोई फीस नहीं ली जाती।"
+    }
+  },
+  {
+    "id": "cloned-app",
+    "scamType": "MALICIOUS_APK",
+    "channel": "app",
+    "message": {
+      "en": "New faster UPI app DemoPay Lite. Install this APK now and get Rs.100 cashback: apk-download.xyz/paylite.apk",
+      "kn": "ಹೊಸ ವೇಗದ UPI ಆ್ಯಪ್ DemoPay Lite. ಈಗಲೇ ಈ APK ಇನ್‌ಸ್ಟಾಲ್ ಮಾಡಿ ಮತ್ತು ರೂ.100 ಕ್ಯಾಶ್‌ಬ್ಯಾಕ್ ಪಡೆಯಿರಿ: apk-download.xyz/paylite.apk",
+      "hi": "नया तेज़ UPI ऐप DemoPay Lite। अभी यह APK इंस्टॉल करें और रु.100 कैशबैक पाएं: apk-download.xyz/paylite.apk"
+    },
+    "redFlags": {
+      "en": [
+        "Install this APK",
+        "cashback",
+        "apk-download.xyz/paylite.apk"
+      ],
+      "kn": [
+        "ಈ APK ಇನ್‌ಸ್ಟಾಲ್ ಮಾಡಿ",
+        "ಕ್ಯಾಶ್‌ಬ್ಯಾಕ್",
+        "apk-download.xyz/paylite.apk"
+      ],
+      "hi": [
+        "यह APK इंस्टॉल करें",
+        "कैशबैक",
+        "apk-download.xyz/paylite.apk"
+      ]
+    },
+    "options": [
+      {
+        "id": "dont-install",
+        "correct": true,
+        "label": {
+          "en": "Don't install",
+          "kn": "ಇನ್‌ಸ್ಟಾಲ್ ಮಾಡಬೇಡಿ",
+          "hi": "इंस्टॉल न करें"
+        },
+        "feedback": {
+          "en": "Smart! APK files sent via links bypass app-store checks and often read your SMS OTPs to steal money.",
+          "kn": "ಬುದ್ಧಿವಂತ ನಿರ್ಧಾರ! ಲಿಂಕ್‌ಗಳಿಂದ ಸಿಗುವ APK ಫೈಲ್‌ಗಳು ಭದ್ರತಾ ತಪಾಸಣೆ ತಪ್ಪಿಸಿ ನಿಮ್ಮ SMS OTP ಕದಿಯುತ್ತವೆ.",
+          "hi": "सही फैसला! लिंक से मिली APK फाइलें सुरक्षा जांच से बच निकलती हैं और आपके SMS OTP चुराकर पैसे निकाल लेती हैं।"
+        }
+      },
+      {
+        "id": "install-apk",
+        "correct": false,
+        "label": {
+          "en": "Install APK for Rs.100 cashback",
+          "kn": "ರೂ.100 ಕ್ಯಾಶ್‌ಬ್ಯಾಕ್‌ಗಾಗಿ APK ಇನ್‌ಸ್ಟಾಲ್ ಮಾಡಿ",
+          "hi": "रु.100 कैशबैक के लिए APK इंस्टॉल करें"
+        },
+        "feedback": {
+          "en": "The cloned DemoPay Lite APK silently forwarded your OTPs and drained Rs.8,000 from Demo Bank.",
+          "kn": "ನಕಲಿ DemoPay Lite APK ನಿಮ್ಮ OTP ಗಳನ್ನು ಕದ್ದು ಡೆಮೊ ಬ್ಯಾಂಕ್ ಖಾತೆಯಿಂದ ರೂ.8,000 ದೋಚಿದೆ.",
+          "hi": "नकली DemoPay Lite APK ने चुपचाप आपके OTP पढ़कर डेमो बैंक खाते से रु.8,000 निकाल लिए।"
+        },
+        "consequence": {
+          "amountBefore": 16500,
+          "amountAfter": 8500,
+          "note": {
+            "en": "DEMO: no real money. Rs.8,000 stolen via malicious sideloaded APK.",
+            "kn": "DEMO: ನಿಜವಾದ ಹಣವಲ್ಲ. ನಕಲಿ APK ಆ್ಯಪ್‌ನಿಂದ ರೂ.8,000 ಕಳ್ಳತನವಾಗಿದೆ.",
+            "hi": "DEMO: असली पैसे नहीं। खतरनाक APK इंस्टॉल करने से रु.8,000 चोरी हो गए।"
+          }
+        }
+      },
+      {
+        "id": "install-no-bank",
+        "correct": false,
+        "label": {
+          "en": "Install APK without linking Demo Bank",
+          "kn": "ಡೆಮೊ ಬ್ಯಾಂಕ್ ಜೋಡಿಸದೆ APK ಇನ್‌ಸ್ಟಾಲ್ ಮಾಡಿ",
+          "hi": "डेमो बैंक जोड़े बिना APK इंस्टॉल करें"
+        },
+        "feedback": {
+          "en": "Even without linking a bank, malicious APKs request Accessibility or SMS permissions to spy on your phone.",
+          "kn": "ಬ್ಯಾಂಕ್ ಜೋಡಿಸದಿದ್ದರೂ, ಕೆಟ್ಟ APK ಗಳು SMS ಮತ್ತು Accessibility ಅನುಮತಿ ಪಡೆದು ನಿಮ್ಮ ಫೋನ್ ಗಮನಿಸುತ್ತವೆ.",
+          "hi": "बैंक न जोड़ने पर भी खतरनाक APK ऐप SMS और Accessibility अनुमति लेकर आपके फोन की जासूसी करते हैं।"
+        }
+      }
+    ],
+    "rule": {
+      "en": "Install apps only from the official store.",
+      "kn": "ಯಾವಾಗಲೂ ಅಧಿಕೃತ ಆ್ಯಪ್ ಸ್ಟೋರ್‌ನಿಂದ ಮಾತ್ರ ಆ್ಯಪ್‌ಗಳನ್ನು ಇನ್‌ಸ್ಟಾಲ್ ಮಾಡಿ.",
+      "hi": "ऐप्स हमेशा केवल आधिकारिक ऐप स्टोर से ही इंस्टॉल करें।"
+    }
+  },
+  {
+    "id": "digital-arrest",
+    "scamType": "DIGITAL_ARREST",
+    "channel": "call",
+    "message": {
+      "en": "Caller: This is the CBI. A parcel in your name has illegal items. You are under digital arrest. Stay on this video call, do not tell anyone, and transfer Rs.40,000 to clear your name.",
+      "kn": "ಕರೆ ಮಾಡಿದವರು: ಇದು CBI ಕರೆ. ನಿಮ್ಮ ಹೆಸರಿನ ಪಾರ್ಸೆಲ್‌ನಲ್ಲಿ ಕಾನೂನುಬಾಹಿರ ವಸ್ತುಗಳಿವೆ. ನಿಮ್ಮನ್ನು ಡಿಜಿಟಲ್ ಅರೆಸ್ಟ್ ಮಾಡಲಾಗಿದೆ. ಈ ವಿಡಿಯೋ ಕರೆಯಲ್ಲಿಯೇ ಇರಿ, ಯಾರಿಗೂ ಹೇಳಬೇಡಿ, ಮತ್ತು ನಿಮ್ಮ ಹೆಸರು ಕ್ಲಿಯರ್ ಮಾಡಲು ರೂ.40,000 ವರ್ಗಾಯಿಸಿ.",
+      "hi": "कॉल करने वाला: हम CBI से बोल रहे हैं। आपके नाम के पार्सल में गैर-कानूनी सामान है। आप डिजिटल अरेस्ट में हैं। इस वीडियो कॉल पर बने रहें, किसी को न बताएं, और अपना नाम साफ करने के लिए रु.40,000 ट्रांसफर करें।"
+    },
+    "redFlags": {
+      "en": [
+        "under digital arrest",
+        "do not tell anyone",
+        "transfer Rs.40,000"
+      ],
+      "kn": [
+        "ಡಿಜಿಟಲ್ ಅರೆಸ್ಟ್",
+        "ಯಾರಿಗೂ ಹೇಳಬೇಡಿ",
+        "ರೂ.40,000 ವರ್ಗಾಯಿಸಿ"
+      ],
+      "hi": [
+        "डिजिटल अरेस्ट",
+        "किसी को न बताएं",
+        "रु.40,000 ट्रांसफर करें"
+      ]
+    },
+    "options": [
+      {
+        "id": "hangup-1930",
+        "correct": true,
+        "label": {
+          "en": "Hang up and call 1930",
+          "kn": "ಕರೆ ಕಟ್ ಮಾಡಿ ಮತ್ತು 1930 ಗೆ ಕರೆ ಮಾಡಿ",
+          "hi": "कॉल काटें और 1930 पर कॉल करें"
+        },
+        "feedback": {
+          "en": "100% right! There is no 'digital arrest' in Indian law. Hang up, tell your family, and report on 1930.",
+          "kn": "100% ಸರಿ! ಭಾರತೀಯ ಕಾನೂನಿನಲ್ಲಿ 'ಡಿಜಿಟಲ್ ಅರೆಸ್ಟ್' ಎಂಬುದೇ ಇಲ್ಲ. ತಕ್ಷಣ ಕರೆ ಕಟ್ ಮಾಡಿ ಮನೆಯವರಿಗೆ ತಿಳಿಸಿ ಮತ್ತು 1930 ಗೆ ದೂರು ನೀಡಿ.",
+          "hi": "100% सही! भारतीय कानून में 'डिजिटल अरेस्ट' जैसी कोई चीज नहीं होती। तुरंत कॉल काटें, घर वालों को बताएं और 1930 पर शिकायत करें।"
+        }
+      },
+      {
+        "id": "transfer-money",
+        "correct": false,
+        "label": {
+          "en": "Transfer Rs.40,000 to clear your name",
+          "kn": "ಹೆಸರು ಕ್ಲಿಯರ್ ಮಾಡಲು ರೂ.40,000 ವರ್ಗಾಯಿಸಿ",
+          "hi": "नाम साफ करने के लिए रु.40,000 ट्रांसफर करें"
+        },
+        "feedback": {
+          "en": "Scammers use fear and secrecy ('do not tell anyone') to rush you into sending Rs.40,000 to a fake account.",
+          "kn": "ವಂಚಕರು ಭಯ ಹುಟ್ಟಿಸಿ ('ಯಾರಿಗೂ ಹೇಳಬೇಡಿ') ನಿಮ್ಮಿಂದ ರೂ.40,000 ಹಣವನ್ನು ಕಿತ್ತುಕೊಳ್ಳುತ್ತಾರೆ.",
+          "hi": "ठग डर दिखाकर और किसी को न बताने को कहकर आपसे अपने नकली खाते में रु.40,000 ट्रांसफर करवा लेते हैं।"
+        },
+        "consequence": {
+          "amountBefore": 52000,
+          "amountAfter": 12000,
+          "note": {
+            "en": "DEMO: no real money. Rs.40,000 lost to fake 'digital arrest' extortion call.",
+            "kn": "DEMO: ನಿಜವಾದ ಹಣವಲ್ಲ. ನಕಲಿ 'ಡಿಜಿಟಲ್ ಅರೆಸ್ಟ್' ಬೆದರಿಕೆಯಿಂದ ರೂ.40,000 ಕಳೆದುಕೊಂಡಿದ್ದೀರಿ.",
+            "hi": "DEMO: असली पैसे नहीं। नकली 'डिजिटल अरेस्ट' की धमकी से रु.40,000 डूब गए।"
+          }
+        }
+      },
+      {
+        "id": "stay-and-show-id",
+        "correct": false,
+        "label": {
+          "en": "Stay on video call and show ID proof",
+          "kn": "ವಿಡಿಯೋ ಕರೆಯಲ್ಲಿಯೇ ಇದ್ದು ಗುರುತಿನ ಚೀಟಿ ತೋರಿಸಿ",
+          "hi": "वीडियो कॉल पर बने रहें और पहचान पत्र दिखाएं"
+        },
+        "feedback": {
+          "en": "Never stay on a threatening video call or share ID documents. Secrecy is how scammers isolate victims.",
+          "kn": "ಬೆದರಿಕೆ ವಿಡಿಯೋ ಕರೆಯಲ್ಲಿ ಇರಬೇಡಿ ಮತ್ತು ಗುರುತಿನ ಚೀಟಿ ತೋರಿಸಬೇಡಿ. ಯಾರಿಗೂ ಹೇಳದಂತೆ ತಡೆಯುವುದೇ ವಂಚಕರ ತಂತ್ರ.",
+          "hi": "धमकी भरे वीडियो कॉल पर न रुकें और पहचान पत्र न दिखाएं। किसी को न बताने देना ही ठगों का मुख्य हथियार है।"
+        }
+      }
+    ],
+    "rule": {
+      "en": "No agency arrests you on a video call or asks for money.",
+      "kn": "ಯಾವುದೇ ಸರ್ಕಾರಿ ಸಂಸ್ಥೆಯು ವಿಡಿಯೋ ಕರೆಯಲ್ಲಿ ಬಂಧಿಸುವುದಿಲ್ಲ ಅಥವಾ ಹಣ ಕೇಳುವುದಿಲ್ಲ.",
+      "hi": "कोई भी सरकारी एजेंसी आपको वीडियो कॉल पर गिरफ्तार नहीं करती और न ही पैसे मांगती है।"
+    }
+  }
+]

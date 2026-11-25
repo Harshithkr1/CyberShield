@@ -200,7 +200,7 @@ public class ScoringEngine {
      */
     public String summary(int score, List<Signal> signals, RiskLevel level) {
         if (signals == null || signals.isEmpty()) {
-            return "No suspicious patterns detected. Always stay vigilant.";
+            return "No strong red flags found. Still verify in your bank app.";
         }
 
         if (hasAuthorityImpersonation(signals) && hasPaymentDemand(signals) && hasSecrecy(signals)) {
@@ -212,7 +212,7 @@ public class ScoringEngine {
         }
 
         return switch (level) {
-            case LOW      -> "A few minor patterns were noted. Treat with light caution.";
+            case LOW      -> "No strong red flags found. Still verify in your bank app.";
             case MEDIUM   -> "Several suspicious patterns found. Verify before acting.";
             case HIGH     -> "Multiple high-risk signals detected. Do not click links or share data.";
             case CRITICAL -> "Extremely high risk. This is very likely a scam. Stop all interaction.";

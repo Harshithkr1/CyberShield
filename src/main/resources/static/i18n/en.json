@@ -1,0 +1,261 @@
+{
+  "lang": {
+    "label": "Language",
+    "en": "English",
+    "kn": "ಕನ್ನಡ",
+    "hi": "हिन्दी"
+  },
+  "mode": {
+    "label": "Mode",
+    "challenge": "Challenge mode",
+    "simple": "Simple mode",
+    "switchToSimple": "Switch to Simple mode (large text, no timer)",
+    "switchToChallenge": "Switch to Challenge mode (timer & score)"
+  },
+  "learn": {
+    "tag": "Interactive Simulator",
+    "start": {
+      "title": "Learn UPI Scams by Practising",
+      "subtitle": "Spot red flags in realistic messages, make the right call under pressure, and see what happens without risking real money.",
+      "startBtn": "Start Practice",
+      "currentMode": "Current mode:",
+      "bestScore": "Best score:",
+      "noBest": "Not played yet",
+      "scoreSuffix": "/ 100",
+      "quickTipsTitle": "Quick tips before you start",
+      "tips": {
+        "pin": "You never enter a UPI PIN or scan a QR code to receive money.",
+        "links": "Banks never send links to update KYC or unblock accounts. Always open your official bank app.",
+        "arrest": "Police, CBI, or courts never arrest anyone on a video call or ask for money to 'verify' accounts.",
+        "apps": "Never install APK files from links or share your screen on support calls."
+      }
+    },
+    "channels": {
+      "sms": "SMS Message",
+      "whatsapp": "WhatsApp Chat",
+      "call": "Phone Call",
+      "payment": "DemoPay Request",
+      "qr": "QR Message",
+      "app": "App Download"
+    },
+    "phone": {
+      "unknownCaller": "Unknown Caller",
+      "unknownSender": "Unknown Contact",
+      "demoPaymentBadge": "DEMO: no real money",
+      "demoQrCaption": "DEMO QR — not scannable (for practice only)"
+    },
+    "scamTypes": {
+      "COLLECT_REQUEST": "UPI Collect Request Scam",
+      "SCREEN_SHARE_REFUND": "Screen-Share Refund Scam",
+      "QR_SCAM": "Fake QR Receive Scam",
+      "KYC_PHISHING": "Fake KYC Phishing Link",
+      "WRONG_TRANSFER": "Fake Wrong Transfer Scam",
+      "FAKE_CUSTOMER_CARE": "Fake Customer Care Number",
+      "LOTTERY_FEE": "Fake Prize / Advance Fee Scam",
+      "MALICIOUS_APK": "Malicious APK / Cloned App",
+      "DIGITAL_ARREST": "Digital Arrest Video Call Scam",
+      "PHISHING": "Phishing / Fake Link Scam",
+      "CREDENTIAL_PHISHING": "Credential & OTP Theft",
+      "MALICIOUS_APP": "Malicious App / Sideloading",
+      "TEXT": "Text Scam Signals",
+      "URL": "Suspicious Link Scam"
+    },
+    "game": {
+      "progress": "Scenario {current} of {total}",
+      "scoreLabel": "Score",
+      "streakLabel": "Streak",
+      "timerLabel": "{sec}s left",
+      "phase1Title": "Step 1: Tap the red flags in the message",
+      "phase1Hint": "Tap suspicious words or links ({found} of {total} spotted)",
+      "phase1Done": "All {total} red flags spotted!",
+      "wrongTap": "Not a red flag — look for urgency, PINs, links, or money requests.",
+      "skipToAction": "Go to Step 2: Choose action",
+      "phase2Title": "Step 2: What will you do?",
+      "simplePrompt": "Do you trust this message or not?",
+      "trustBtn": "Trust it",
+      "dontTrustBtn": "Don't trust it",
+      "timeoutHeadline": "Scammers rely on pressure.",
+      "timeoutDesc": "Time ran out — scams push you to act fast before you can think.",
+      "correctHeadline": "Right move!",
+      "wrongHeadline": "Careful — that was a trap",
+      "simpleGoodTitle": "Good choice",
+      "simpleGentleTitle": "Let's look at this together",
+      "pointsEarned": "+{pts} pts",
+      "scamTypeLabel": "Scam type:",
+      "missedFlagsTitle": "Red flags to notice:",
+      "allFlagsCaught": "You spotted every red flag.",
+      "ruleTitle": "Rule to remember",
+      "consequenceTitle": "What happened to Demo Bank balance",
+      "demoBadge": "DEMO: no real money",
+      "beforeLabel": "Before",
+      "afterLabel": "After",
+      "realWarning": "Real UPI payments are very hard to reverse. Call 1930 immediately.",
+      "nextBtn": "Next scenario",
+      "finishBtn": "See results",
+      "requeueNote": "We will bring this scenario back once more later so you can practise it again.",
+      "backToStart": "Back to start",
+      "loadError": "Could not load practice scenarios. Please refresh the page and try again.",
+      "retryLoad": "Retry"
+    },
+    "result": {
+      "title": "Practice Complete",
+      "scoreLabel": "Scam Safety Score",
+      "simpleSpotted": "You spotted {correct} of {total}",
+      "tiers": {
+        "shield": "Scam Shield",
+        "alert": "Alert",
+        "learning": "Learning",
+        "practice": "Needs practice"
+      },
+      "newBest": "New best score!",
+      "weakSpotsTitle": "Weak spots to review",
+      "noWeakSpots": "Strong run! You didn't miss any scam patterns this round.",
+      "playAgain": "Play again",
+      "practiseWeak": "Practise my weak spots ({count})",
+      "share": "Share result",
+      "shareTextChallenge": "I scored {score}/100 ({tier}) on Cyber Shield UPI Scam Simulator! Practise spotting scams safely.",
+      "shareTextSimple": "I spotted {correct} of {total} UPI scams on Cyber Shield! Practise spotting scams safely.",
+      "copiedToast": "Result summary copied to clipboard!"
+    }
+  },
+  "check": {
+    "noStrongFlags": "No strong red flags found. Still verify in your bank app.",
+    "helperNote": "Rules plus a small ML model. A helper, not a guarantee.",
+    "detailsInEnglish": "Details are shown in English.",
+    "practiseScamBtn": "Practise this scam",
+    "playOwnBtn": "Play your own message",
+    "samples": {
+      "kycKn": "ಕನ್ನಡ KYC ಮಾದರಿ",
+      "arrestHi": "हिन्दी डिजिटल अरेस्ट"
+    },
+    "customScenario": {
+      "optTrust": "Trust it",
+      "optIgnore": "Ignore it",
+      "optReport": "Report it",
+      "optVerify": "Verify in my bank app",
+      "verifyFeedback": "Always check inside your official bank app independently — and when red flags appear, ignoring or reporting on 1930 is safest.",
+      "defaultFeedback": "Review all matched triggers and verify through official channels before acting.",
+      "rule": "Never act on a message that rushes you. Verify in your official app."
+    }
+  },
+  "verify": {
+    "tag": "Cryptographic & Registry Check",
+    "title": "Verify Before, During & After Payment",
+    "subtitle": "See how receiver checks, signed payment codes, and tamper-evident receipt trails stop UPI fraud.",
+    "demoBanner": "DEMO. Fictional merchants. No real payments. In real life the merchant's bank or payment provider issues the signed codes.",
+    "demoNoMoney": "DEMO: no real money",
+    "tabs": {
+      "t1": "1 Before payment",
+      "t2": "2 During payment",
+      "t3": "3 After payment"
+    },
+    "tab1": {
+      "explainer": "Check whether a UPI ID matches a registered Demo Bank business or looks like a typo trap before sending money.",
+      "upiLabel": "Receiver UPI ID",
+      "upiPlaceholder": "e.g. ravi@demobank",
+      "nameLabel": "Expected business name (optional)",
+      "namePlaceholder": "e.g. Ravi Stores",
+      "verifyBtn": "Verify receiver",
+      "samplesLabel": "Try examples:",
+      "sampleVerified": "Verified merchant",
+      "sampleMismatch": "Name mismatch",
+      "sampleLookalike": "Lookalike ID",
+      "sampleUnknown": "Unknown ID",
+      "upiRequired": "Please enter a UPI ID to check.",
+      "verdicts": {
+        "VERIFIED_DEMO": "Verified Demo Merchant",
+        "NAME_MISMATCH": "Name Mismatch Warning",
+        "LOOKALIKE": "Lookalike Scam Warning",
+        "UNKNOWN": "Cannot be verified here"
+      },
+      "verdictDesc": {
+        "VERIFIED_DEMO": "This UPI ID and name match a registered Demo Bank merchant.",
+        "NAME_MISMATCH": "This UPI ID is registered to a different business name. Pause and double-check.",
+        "LOOKALIKE": "This ID is not registered, and is dangerously close to a real Demo Bank ID (possible typosquatting).",
+        "UNKNOWN": "Cannot be verified here — always confirm the merchant's ID in person or via official bills."
+      },
+      "closestLabel": "Closest registered merchant:"
+    },
+    "tab2": {
+      "explainer": "Generate an HMAC-signed DemoPay link and QR code, then test what happens if anyone alters the amount.",
+      "merchantLabel": "Choose Demo Bank merchant",
+      "amountLabel": "Amount (Rs.0.01 – Rs.100,000)",
+      "generateBtn": "Generate signed QR",
+      "sealLine": "A digital seal that locks amount, receiver and order",
+      "linkLabel": "Signed DemoPay link:",
+      "openCustomerBtn": "Open as customer",
+      "invalidAmount": "Enter a valid amount between Rs.0.01 and Rs.100,000.",
+      "tryTitle": "Try it yourself",
+      "tryHint": "Change the amount below to simulate an attacker editing the payment link, then tap Check.",
+      "editAmountLabel": "Received / edited amount (Rs.)",
+      "checkBtn": "Check",
+      "originalLabel": "Original signed amount",
+      "receivedLabel": "Received amount",
+      "statusValid": "Valid digital seal — details match the issuer's signature.",
+      "statusTampered": "Signature mismatch: the payment details were changed",
+      "statusExpired": "Expired: this signed code passed its 10-minute validity window.",
+      "statusMalformed": "Malformed payment token."
+    },
+    "tab3": {
+      "explainer": "Every confirmed demo payment links to the previous receipt's SHA-256 hash so silent edits break the chain.",
+      "confirmBtn": "Confirm demo payment",
+      "tamperBtn": "Tamper with an entry",
+      "verifyBtn": "Verify trail",
+      "clearBtn": "Clear trail",
+      "reportBtn": "Report suspicious",
+      "emptyTrail": "No demo receipts yet. Tap 'Confirm demo payment' at least twice to build a hash-chained trail.",
+      "needTwoForTamper": "Confirm at least 2 demo payments first so entry #2 can be tampered.",
+      "tamperDone": "Locally edited amount on entry #2 without updating hashes. Now tap 'Verify trail'.",
+      "chainIntact": "Chain intact",
+      "chainBroken": "Chain broken at entry #{index}",
+      "colId": "Receipt ID",
+      "colMerchant": "Merchant",
+      "colAmount": "Amount",
+      "colTime": "Time",
+      "colHash": "Short Hash"
+    },
+    "limits": {
+      "title": "What this can and cannot do",
+      "canTitle": "What it CAN do",
+      "canText": "Detects changed amounts, edited receiver/order fields, expired links, and fake codes not signed by a trusted bank or payment issuer.",
+      "cannotTitle": "What it CANNOT do",
+      "cannotText": "Cannot verify a random unsigned QR code from a stranger, or stop you if a scammer tricks you into paying their own valid account willingly."
+    },
+    "payDemo": {
+      "title": "DemoPay Customer Verification Screen",
+      "subtitle": "Inspecting signed DemoPay link parameters before paying.",
+      "checking": "Verifying digital signature…",
+      "missingParams": "Missing payment link parameters (?p=...&s=...).",
+      "backLink": "Back to Verify Simulator",
+      "merchantField": "Merchant ID",
+      "upiField": "Payee UPI ID",
+      "amountField": "Locked Amount",
+      "orderField": "Order ID",
+      "expiryField": "Expires At",
+      "verdictTitles": {
+        "VALID": "VALID",
+        "TAMPERED": "TAMPERED",
+        "EXPIRED": "EXPIRED",
+        "MALFORMED": "MALFORMED"
+      }
+    },
+    "needsServer": "Needs the server. Run locally or open the live link."
+  },
+  "health": {
+    "checking": "Connecting to server…",
+    "waking": "Waking up the server (free hosting)…",
+    "unreachable": "Server is currently unreachable. Learn mode keeps working offline; Check & Verify need the live server."
+  },
+  "presenter": {
+    "title": "Presenter",
+    "collapse": "Hide",
+    "expand": "Open",
+    "b1": "1. Run KYC Check",
+    "b2": "2. Learn kyc-sms",
+    "b3": "3. Cycle Lang",
+    "b4": "4. Ravi Rs.500 QR",
+    "b5": "5. Reset Demo",
+    "resetDone": "Cleared uss.* demo state."
+  }
+}
+

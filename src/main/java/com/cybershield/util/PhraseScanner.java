@@ -138,6 +138,21 @@ public final class PhraseScanner {
                     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
         }
 
+        // Preserve non-ASCII characters (Kannada, Hindi, etc.) so Unicode phrases are not stripped to ASCII tokens
+        if (trimmed.codePoints().anyMatch(cp -> cp > 127)) {
+            String[] unicodeTokens = trimmed.split("\\s+");
+            List<String> quoted = new ArrayList<>();
+            for (String ut : unicodeTokens) {
+                if (!ut.isBlank()) quoted.add(Pattern.quote(ut));
+            }
+            if (quoted.isEmpty()) {
+                return Pattern.compile(Pattern.quote(phrase), Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+            }
+            String joined = String.join("\\s+", quoted);
+            return Pattern.compile("(?<![\\p{L}\\p{M}])" + joined + "(?![\\p{L}\\p{M}])",
+                    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+        }
+
         String[] tokens = trimmed.split("[^a-zA-Z0-9]+");
         List<String> regexTokens = new ArrayList<>();
         for (String token : tokens) {

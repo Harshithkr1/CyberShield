@@ -26,6 +26,18 @@ class AnalyzeControllerIntegrationTest {
         @Autowired
         ObjectMapper mapper;
 
+        @Test
+        @DisplayName("GET /api/health returns UP and version, and GET / returns 200")
+        void healthAndRoot_return200() throws Exception {
+                mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/api/health"))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.status").value("UP"))
+                                .andExpect(jsonPath("$.version").isString());
+
+                mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/"))
+                                .andExpect(status().isOk());
+        }
+
         // ── Happy path ────────────────────────────────────────────────────────────
 
         @Test
@@ -214,6 +226,7 @@ class AnalyzeControllerIntegrationTest {
                                 .andExpect(jsonPath("$.score").value(0))
                                 .andExpect(jsonPath("$.score").value(org.hamcrest.Matchers.lessThan(25)))
                                 .andExpect(jsonPath("$.level").value("LOW"))
+                                .andExpect(jsonPath("$.summary").value("No strong red flags found. Still verify in your bank app."))
                                 .andExpect(jsonPath("$.scamType").value("SAFE"))
                                 .andExpect(jsonPath("$.signals", org.hamcrest.Matchers.hasSize(0)))
                                 .andExpect(jsonPath("$.urls", org.hamcrest.Matchers.hasSize(0)));

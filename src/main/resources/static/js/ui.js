@@ -7,46 +7,52 @@
  * against XSS.
  */
 
+import { t, getLang, onLangChange } from './i18n.js';
+
 // ── DOM references ────────────────────────────────────────────────────────
 
 const $ = (id) => document.getElementById(id);
 
-const emptyState       = $('empty-state');
-const loadingState     = $('loading-state');
-const errorState       = $('error-state');
-const errorMsg         = $('error-message');
-const resultCard       = $('result-card');
+const emptyState = $('empty-state');
+const loadingState = $('loading-state');
+const errorState = $('error-state');
+const errorMsg = $('error-message');
+const resultCard = $('result-card');
 
-const gaugeArc         = $('gauge-arc');
-const gaugeNeedle      = $('gauge-needle');
-const gaugeScore       = $('gauge-score');
-const riskBadge        = $('risk-badge');
-const scamType         = $('scam-type');
-const resultSummary    = $('result-summary');
+const gaugeArc = $('gauge-arc');
+const gaugeNeedle = $('gauge-needle');
+const gaugeScore = $('gauge-score');
+const riskBadge = $('risk-badge');
+const scamType = $('scam-type');
+const resultSummary = $('result-summary');
 
-const highlightedSec   = $('highlighted-section');
-const highlightLegend  = $('highlight-legend');
-const highlightedBox   = $('highlighted-message');
+const highlightedSec = $('highlighted-section');
+const highlightLegend = $('highlight-legend');
+const highlightedBox = $('highlighted-message');
 
-const signalsSection   = $('signals-section');
-const signalsTitle     = $('signals-title');
-const signalsList      = $('signals-list');
+const signalsSection = $('signals-section');
+const signalsTitle = $('signals-title');
+const signalsList = $('signals-list');
 
-const urlsSection      = $('urls-section');
-const urlsList         = $('urls-list');
+const urlsSection = $('urls-section');
+const urlsList = $('urls-list');
 
-const actionPanel      = $('action-panel');
-const criticalAlert    = $('critical-alert');
-const actionTitle      = $('action-title');
-const actionList       = $('action-list');
+const actionPanel = $('action-panel');
+const criticalAlert = $('critical-alert');
+const actionTitle = $('action-title');
+const actionList = $('action-list');
 
-const btnCopyResult    = $('btn-copy-result');
-const copyHint         = $('copy-hint');
-const copyToast        = $('copy-toast');
+const btnCopyResult = $('btn-copy-result');
+const btnPractiseScam = $('btn-practise-scam');
+const btnPlayOwn = $('btn-play-own');
+const resultHelperNote = $('result-helper-note');
+const resultLangNote = $('result-lang-note');
+const copyHint = $('copy-hint');
+const copyToast = $('copy-toast');
 
-const mlSection        = $('ml-section');
-const mlDetails        = $('ml-details');
-const scoreFormula     = $('score-formula');
+const mlSection = $('ml-section');
+const mlDetails = $('ml-details');
+const scoreFormula = $('score-formula');
 
 // Gauge geometry constants (M20 100 A80 80 0 0 1 180 100 -> radius 80 -> pi * 80)
 const GAUGE_CIRCUMFERENCE = 251.2;
@@ -112,12 +118,12 @@ function createSvg(viewBox, pathD, className) {
 export function showResult(result, originalText = '') {
   if (!result) return;
 
-  const score    = typeof result.score === 'number' ? result.score : 0;
-  const level    = result.level ?? 'LOW';
-  const type     = result.scamType ?? 'SAFE';
-  const summary  = result.summary ?? '';
-  const signals  = Array.isArray(result.signals) ? result.signals : [];
-  const urls     = Array.isArray(result.urls) ? result.urls : [];
+  const score = typeof result.score === 'number' ? result.score : 0;
+  const level = result.level ?? 'LOW';
+  const type = result.scamType ?? 'SAFE';
+  const summary = result.summary ?? '';
+  const signals = Array.isArray(result.signals) ? result.signals : [];
+  const urls = Array.isArray(result.urls) ? result.urls : [];
 
   // Fallback to input textarea value if originalText wasn't passed directly
   if (!originalText) {
@@ -136,12 +142,13 @@ export function showResult(result, originalText = '') {
   if (scamType) {
     scamType.textContent = type && type !== 'SAFE'
       ? `Threat Vector: ${formatScamType(type)}`
-      : 'No Threat Pattern Detected';
+      : tOr('check.noStrongFlags', 'No strong red flags found. Still verify in your bank app.');
   }
 
   // 4. One-line summary
   if (resultSummary) {
-    resultSummary.textContent = summary;
+    const lowMsg = tOr('check.noStrongFlags', 'No strong red flags found. Still verify in your bank app.');
+    resultSummary.textContent = level === 'LOW' ? lowMsg : (summary || lowMsg);
   }
 
   // 5. Render highlighted message (textContent only, zero innerHTML) & legend
@@ -161,6 +168,9 @@ export function showResult(result, originalText = '') {
 
   // 10. ML section (if ML output is provided or off-note when disabled)
   renderMlSection(result);
+
+  // 11. Learn bridge buttons ("Practise this scam", "Play your own message") & helper notes
+  renderLearnBridge(result, originalText);
 
   // Reveal the card
   showOnly(resultCard);
@@ -291,7 +301,7 @@ const CATEGORY_META = {
 
 function classifySignal(signal) {
   const cat = String(signal.category || '').toUpperCase();
-  const id  = String(signal.id || '').toLowerCase();
+  const id = String(signal.id || '').toLowerCase();
 
   if (cat === 'DIGITAL_ARREST' || id.includes('digitalarrest')) return 'DIGITAL_ARREST';
   if (cat === 'MALICIOUS_APP' || id.includes('maliciousapp') || id.includes('apk')) return 'MALICIOUS_APP';
@@ -325,7 +335,7 @@ function renderHighlightedMessage(originalText, signals) {
   const rawIntervals = [];
   for (const s of signals) {
     if (typeof s.start === 'number' && typeof s.end === 'number' &&
-        s.start >= 0 && s.end > s.start && s.end <= text.length) {
+      s.start >= 0 && s.end > s.start && s.end <= text.length) {
 
       const spanLen = s.end - s.start;
       if (s.id?.startsWith('text.excessive') && spanLen >= text.length * 0.9 && signals.length > 1) {
@@ -361,7 +371,7 @@ function renderHighlightedMessage(originalText, signals) {
 
   for (let i = 0; i < sortedPoints.length - 1; i++) {
     const segStart = sortedPoints[i];
-    const segEnd   = sortedPoints[i + 1];
+    const segEnd = sortedPoints[i + 1];
     if (segStart >= segEnd) continue;
 
     // Find intervals covering this segment
@@ -462,7 +472,7 @@ function renderSignalsList(signals) {
     emptyNotice.className = 'signals-empty-card';
     const msg = document.createElement('p');
     msg.className = 'signal-explanation';
-    msg.textContent = 'No suspicious indicators found. The text shows no known deceptive phrases, fraudulent URL structures, or coercive scripts.';
+    msg.textContent = tOr('check.noStrongFlags', 'No strong red flags found. Still verify in your bank app.');
     emptyNotice.appendChild(msg);
     signalsList.appendChild(emptyNotice);
     signalsSection.classList.remove('hidden');
@@ -770,9 +780,9 @@ function getActionSteps(level, scamType) {
     case 'LOW':
     default:
       return [
-        'No immediate scam patterns were detected, but always stay vigilant with unexpected messages.',
+        tOr('check.noStrongFlags', 'No strong red flags found. Still verify in your bank app.'),
         'Never share passwords, banking PINs, or OTPs with anyone.',
-        'Always check the sender\'s full address and verify links before clicking.'
+        'Always check the sender’s full address and verify links before clicking.'
       ];
   }
 }
@@ -780,13 +790,13 @@ function getActionSteps(level, scamType) {
 // ── Plain-text Report Generator for Copy Button ───────────────────────────
 
 function prepareCopyReport(result, originalText) {
-  const score    = result.score ?? 0;
-  const level    = result.level ?? 'LOW';
-  const type     = formatScamType(result.scamType ?? 'SAFE');
-  const summary  = result.summary ?? '';
-  const signals  = result.signals ?? [];
-  const urls     = result.urls ?? [];
-  const actions  = getActionSteps(level, result.scamType);
+  const score = result.score ?? 0;
+  const level = result.level ?? 'LOW';
+  const type = formatScamType(result.scamType ?? 'SAFE');
+  const summary = result.summary ?? '';
+  const signals = result.signals ?? [];
+  const urls = result.urls ?? [];
+  const actions = getActionSteps(level, result.scamType);
 
   const lines = [];
   lines.push('================================================================');
@@ -812,7 +822,7 @@ function prepareCopyReport(result, originalText) {
 
   lines.push(`Why this score (${signals.length} indicators):`);
   if (signals.length === 0) {
-    lines.push('• No suspicious patterns detected.');
+    lines.push(`• ${tOr('check.noStrongFlags', 'No strong red flags found. Still verify in your bank app.')}`);
   } else {
     signals.forEach((s) => {
       lines.push(`• [${s.category ?? 'SIGNAL'}] (+${s.points ?? 0} pts) ${s.explanation ?? ''}`);
@@ -917,7 +927,7 @@ function renderMlSection(result) {
   const hasUrls = urls.length > 0;
 
   const textPct = Math.round((textProbability || 0) * 100);
-  const urlPct  = Math.round((urlProbability || 0) * 100);
+  const urlPct = Math.round((urlProbability || 0) * 100);
   const mlScore = (rawMlScore != null && rawMlScore > 0) ? rawMlScore : (hasUrls ? Math.max(textPct, urlPct) : textPct);
   const ruleScore = rawRuleScore != null ? rawRuleScore : (result?.score ?? 0);
   const finalScore = result?.score ?? 0;
@@ -1030,4 +1040,153 @@ function formatScamType(key) {
 
 function pct(v) {
   return typeof v === 'number' ? `${(v * 100).toFixed(1)}%` : '—';
+}
+
+
+// ── Bridge to Learn Game (#learn) & Helper Notes ──────────────────────────
+
+function tOr(key, fallback) {
+  const res = t(key);
+  return res === key ? fallback : res;
+}
+
+/**
+ * Maps backend AnalysisResult scamType and signal categories/IDs
+ * to a matching scenario id in static/data/scenarios.json.
+ */
+function mapResultToScenarioId(result) {
+  const scamType = String(result?.scamType || '').toUpperCase();
+  const signals = Array.isArray(result?.signals) ? result.signals : [];
+
+  if (scamType === 'DIGITAL_ARREST') return 'digital-arrest';
+
+  if (scamType === 'MALICIOUS_APP') {
+    const isScreenShare = signals.some((s) =>
+      /screen|anydesk|teamviewer|quicksupport|remote/i.test(`${s.matchedText || ''} ${s.explanation || ''}`)
+    );
+    return isScreenShare ? 'refund-call' : 'cloned-app';
+  }
+
+  if (scamType === 'CREDENTIAL_PHISHING') {
+    if (signals.some((s) => s.id === 'text.kycThreat')) return 'kyc-sms';
+    return 'collect-request';
+  }
+
+  if (scamType === 'PHISHING') {
+    if (signals.some((s) => s.id === 'text.prizeBait')) return 'lottery-fee';
+    return 'kyc-sms';
+  }
+
+  // Fallback by dominant signal category when scamType doesn't match directly
+  const catPoints = {};
+  for (const s of signals) {
+    const cat = String(s.category || '').toUpperCase();
+    catPoints[cat] = (catPoints[cat] || 0) + (s.points || 0);
+  }
+  const topCat = Object.entries(catPoints).sort((a, b) => b[1] - a[1])[0]?.[0];
+
+  if (topCat === 'DIGITAL_ARREST') return 'digital-arrest';
+  if (topCat === 'MALICIOUS_APP') return 'cloned-app';
+  if (topCat === 'URL') return 'kyc-sms';
+  if (topCat === 'TEXT') {
+    if (signals.some((s) => s.id === 'text.prizeBait')) return 'lottery-fee';
+    if (signals.some((s) => s.id === 'text.otpSolicitation' || s.id === 'text.sensitiveData')) return 'collect-request';
+    return 'kyc-sms';
+  }
+
+  return 'collect-request';
+}
+
+function buildCustomPlayScenario(result, originalText) {
+  const snippet = String(originalText || '').trim().slice(0, 400);
+  const signals = Array.isArray(result?.signals) ? result.signals : [];
+
+  const seenFlags = new Set();
+  const uniqueFlags = [];
+  for (const s of signals) {
+    const m = typeof s.matchedText === 'string' ? s.matchedText : '';
+    if (m && snippet.includes(m) && !seenFlags.has(m)) {
+      seenFlags.add(m);
+      uniqueFlags.push(m);
+    }
+  }
+
+  const seenExpl = new Set();
+  const explParts = [];
+  for (const s of signals) {
+    if (s.explanation && !seenExpl.has(s.explanation)) {
+      seenExpl.add(s.explanation);
+      explParts.push(s.explanation);
+    }
+  }
+  const assembledFeedback = explParts.length > 0
+    ? explParts.join(' ')
+    : tOr('check.customScenario.defaultFeedback', 'Review all matched triggers and verify through official channels before acting.');
+
+  const urls = Array.isArray(result?.urls) ? result.urls : [];
+  const rawType = String(result?.scamType || 'PHISHING').toUpperCase();
+
+  return {
+    id: '__custom__',
+    isCustom: true,
+    scamType: rawType === 'SAFE' ? 'PHISHING' : rawType,
+    channel: urls.length > 0 ? 'sms' : 'whatsapp',
+    message: { en: snippet, kn: snippet, hi: snippet },
+    redFlags: { en: uniqueFlags, kn: uniqueFlags, hi: uniqueFlags },
+    options: [
+      { id: 'trust', correct: false, labelKey: 'check.customScenario.optTrust', feedbackText: assembledFeedback },
+      { id: 'ignore', correct: true, labelKey: 'check.customScenario.optIgnore', feedbackText: assembledFeedback },
+      { id: 'report', correct: true, labelKey: 'check.customScenario.optReport', feedbackText: assembledFeedback },
+      { id: 'verify', correct: false, labelKey: 'check.customScenario.optVerify', feedbackKey: 'check.customScenario.verifyFeedback' }
+    ],
+    ruleKey: 'check.customScenario.rule'
+  };
+}
+
+function updateResultLanguageNotes() {
+  if (resultHelperNote) {
+    resultHelperNote.textContent = tOr('check.helperNote', 'Rules plus a small ML model. A helper, not a guarantee.');
+  }
+  if (resultLangNote) {
+    const showEnglishNotice = getLang() !== 'en';
+    resultLangNote.textContent = showEnglishNotice
+      ? tOr('check.detailsInEnglish', 'Details are shown in English.')
+      : '';
+    resultLangNote.classList.toggle('hidden', !showEnglishNotice);
+  }
+}
+
+onLangChange(updateResultLanguageNotes);
+
+function renderLearnBridge(result, originalText) {
+  updateResultLanguageNotes();
+
+  const level = String(result?.level || 'LOW').toUpperCase();
+
+  if (btnPractiseScam) {
+    btnPractiseScam.textContent = tOr('check.practiseScamBtn', 'Practise this scam');
+    btnPractiseScam.classList.remove('hidden');
+    btnPractiseScam.onclick = () => {
+      const scenarioId = mapResultToScenarioId(result);
+      if (window.USS && typeof window.USS.startScenario === 'function') {
+        window.USS.startScenario(scenarioId);
+      }
+    };
+  }
+
+  if (btnPlayOwn) {
+    const showPlayOwn = level === 'MEDIUM' || level === 'HIGH' || level === 'CRITICAL';
+    btnPlayOwn.classList.toggle('hidden', !showPlayOwn);
+    if (showPlayOwn) {
+      btnPlayOwn.textContent = tOr('check.playOwnBtn', 'Play your own message');
+      btnPlayOwn.onclick = () => {
+        const customScenario = buildCustomPlayScenario(result, originalText);
+        if (window.USS && typeof window.USS.startCustomScenario === 'function') {
+          window.USS.startCustomScenario(customScenario);
+        }
+      };
+    } else {
+      btnPlayOwn.onclick = null;
+    }
+  }
 }

@@ -73,6 +73,7 @@ class ScoringEngineAndAnalyzerTest {
         assertThat(result.score()).isEqualTo(0);
         assertThat(result.level()).isEqualTo(RiskLevel.LOW);
         assertThat(result.scamType()).isEqualTo("SAFE");
+        assertThat(result.summary()).isEqualTo("No strong red flags found. Still verify in your bank app.");
         assertThat(result.signals()).isEmpty();
         assertThat(result.ml()).isNull();
     }
@@ -88,6 +89,7 @@ class ScoringEngineAndAnalyzerTest {
         // Diminishing returns ensures weak signals don't breach Low threshold
         assertThat(result.score()).isGreaterThan(0).isLessThan(25);
         assertThat(result.level()).isEqualTo(RiskLevel.LOW);
+        assertThat(result.summary()).isEqualTo("No strong red flags found. Still verify in your bank app.");
         assertThat(result.signals()).anyMatch(s -> s.id().equals("text.excessiveCaps"));
     }
 
@@ -241,6 +243,7 @@ class ScoringEngineAndAnalyzerTest {
         assertThat(result.level()).isEqualTo(RiskLevel.LOW);
         assertThat(result.score()).isLessThan(25);
         assertThat(result.score()).isLessThanOrEqualTo(49);
+        assertThat(result.summary()).isEqualTo("No strong red flags found. Still verify in your bank app.");
         assertThat(result.signals()).isEmpty();
         assertThat(result.ml()).isNotNull();
         assertThat(result.ml().ruleScore()).isEqualTo(0);
@@ -299,6 +302,62 @@ class ScoringEngineAndAnalyzerTest {
                     name, rScore, rLvl, hScore, hLvl, mlScore, formula);
         }
         System.out.println("==================================================================================================================\n");
+    }
+
+    @Test
+    @DisplayName("Multilingual: 3 Kannada and 3 Hindi scam messages score MEDIUM or higher")
+    void kannadaAndHindiScams_scoreMediumOrHigher() {
+        List<String> scamMessages = List.of(
+                // 3 Kannada scam messages
+                "ಬ್ಯಾಂಕ್ ಎಚ್ಚರಿಕೆ: ನಿಮ್ಮ KYC ಮುಕ್ತಾಯಗೊಳ್ಳುತ್ತದೆ. ತಕ್ಷಣ ಕ್ರಮ ಕೈಗೊಳ್ಳಿ ಇಲ್ಲದಿದ್ದರೆ ನಿಮ್ಮ ಖಾತೆ ಬ್ಲಾಕ್ ಆಗುತ್ತದೆ: http://upi-kyc-in.top",
+                "ಅಭಿನಂದನೆಗಳು! ನೀವು ಬಹುಮಾನ ಗೆದ್ದಿದ್ದೀರಿ. ಪ್ರೊಸೆಸಿಂಗ್ ಶುಲ್ಕ ಪಾವತಿಸಿ ಮತ್ತು ನಿಮ್ಮ UPI ಪಿನ್ ನಮೂದಿಸಿ.",
+                "ಇದು ಪೊಲೀಸ್ ಕರೆ. ನೀವು ಡಿಜಿಟಲ್ ಅರೆಸ್ಟ್ ಆಗಿದ್ದೀರಿ. ವಿಡಿಯೋ ಕರೆಯಲ್ಲಿಯೇ ಇರಿ, ಯಾರಿಗೂ ಹೇಳಬೇಡಿ ಮತ್ತು ಸುರಕ್ಷಿತ ಖಾತೆಗೆ ಹಣ ವರ್ಗಾಯಿಸಿ.",
+                // 3 Hindi scam messages
+                "आपका KYC खत्म हो रहा है। तुरंत कार्रवाई करें वरना आपका खाता बंद हो जाएगा: http://upi-kyc-in.top",
+                "बधाई हो! आप इनाम जीत गए हैं। प्रोसेसिंग फीस भरें और अपना UPI पिन डालें।",
+                "पुलिस कॉल: आप डिजिटल अरेस्ट में हैं। वीडियो कॉल पर बने रहें, किसी को न बताएं और सुरक्षित खाते में पैसे ट्रांसफर करें।"
+        );
+
+        for (String msg : scamMessages) {
+            AnalysisResult rulesOnly = analyzerService.analyse(msg, false);
+            assertThat(rulesOnly.level())
+                    .as("Rules-only score should be >= MEDIUM for scam message: " + msg)
+                    .isIn(RiskLevel.MEDIUM, RiskLevel.HIGH, RiskLevel.CRITICAL);
+            assertThat(rulesOnly.score()).isGreaterThanOrEqualTo(25);
+
+            AnalysisResult hybrid = analyzerService.analyse(msg, true);
+            assertThat(hybrid.level())
+                    .as("Hybrid score should be >= MEDIUM for scam message: " + msg)
+                    .isIn(RiskLevel.MEDIUM, RiskLevel.HIGH, RiskLevel.CRITICAL);
+        }
+    }
+
+    @Test
+    @DisplayName("Multilingual: 2 genuine Kannada and 2 genuine Hindi messages stay LOW")
+    void genuineKannadaAndHindi_stayLow() {
+        List<String> genuineMessages = List.of(
+                // 2 genuine Kannada messages
+                "ನಮಸ್ಕಾರ, ನಾಳೆ ಬೆಳಿಗ್ಗೆ 10 ಗಂಟೆಗೆ ಕಚೇರಿ ಮೀಟಿಂಗ್ ಇದೆ. ದಯವಿಟ್ಟು ಸಮಯಕ್ಕೆ ಸರಿಯಾಗಿ ಬನ್ನಿ.",
+                "ನಿಮ್ಮ ಮನೆಯ ವಿದ್ಯುತ್ ಬಿಲ್ ಪಾವತಿ ಯಶಸ್ವಿಯಾಗಿದೆ. ರಶೀದಿಯನ್ನು ಅಧಿಕೃತ ಆ್ಯಪ್‌ನಲ್ಲಿ ನೋಡಿ.",
+                // 2 genuine Hindi messages
+                "नमस्ते, कल सुबह 10 बजे हमारी टीम की मीटिंग है। कृपया समय पर जुड़ें।",
+                "आपके बिजली बिल का भुगतान सफल रहा। अपनी रसीद आधिकारिक ऐप में देखें।"
+        );
+
+        for (String msg : genuineMessages) {
+            AnalysisResult rulesOnly = analyzerService.analyse(msg, false);
+            assertThat(rulesOnly.level())
+                    .as("Genuine message must stay LOW (rules-only): " + msg)
+                    .isEqualTo(RiskLevel.LOW);
+            assertThat(rulesOnly.score()).isLessThan(25);
+            assertThat(rulesOnly.summary()).isEqualTo("No strong red flags found. Still verify in your bank app.");
+
+            AnalysisResult hybrid = analyzerService.analyse(msg, true);
+            assertThat(hybrid.level())
+                    .as("Genuine message must stay LOW (hybrid): " + msg)
+                    .isEqualTo(RiskLevel.LOW);
+            assertThat(hybrid.score()).isLessThan(25);
+        }
     }
 
     private Signal createDummySignal(String id, int points, int start, int end) {

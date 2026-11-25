@@ -193,7 +193,9 @@ const SAMPLES = {
   arrest: "This is Officer R. K. Verma from Central Bureau of Investigation cyber cell. An arrest warrant is issued against your name for money laundering and a drug parcel seized at Mumbai airport. You are under digital arrest. Stay on video call, do not tell anyone, and transfer funds to safe account for RBI verification.",
   courier: "Your FedEx courier parcel #FDX-99821 is on hold at customs clearance. Pay customs duty fee of Rs 49 to release package and reschedule your delivery: http://fedx-customs-clearance.top/track",
   apk: "Urgent notice from Power Grid: Electricity connection will be disconnected tonight due to unpaid dues. Install our electricity bill app to clear bill: http://quick-power-bill.org/payment.apk. Enable unknown sources and grant accessibility permission.",
-  safe: "Hi Ananya, please find the meeting agenda and presentation slides for tomorrow's project review at 3 PM in the conference room. Let me know if you'd like to add any discussion points. Thanks!"
+  safe: "Hi Ananya, please find the meeting agenda and presentation slides for tomorrow's project review at 3 PM in the conference room. Let me know if you'd like to add any discussion points. Thanks!",
+  kycKn: "ಬ್ಯಾಂಕ್ ಎಚ್ಚರಿಕೆ: ನಿಮ್ಮ KYC ಮುಕ್ತಾಯಗೊಳ್ಳುತ್ತದೆ. ತಕ್ಷಣ ಕ್ರಮ ಕೈಗೊಳ್ಳಿ ಇಲ್ಲದಿದ್ದರೆ ನಿಮ್ಮ ಖಾತೆ ಬ್ಲಾಕ್ ಆಗುತ್ತದೆ: http://upi-kyc-in.top",
+  arrestHi: "CBI कॉल: आप डिजिटल अरेस्ट में हैं। वीडियो कॉल पर बने रहें, किसी को न बताएं और सुरक्षित खाते में पैसे ट्रांसफर करें।"
 };
 
 const sampleButtons = document.querySelectorAll('.btn-sample');

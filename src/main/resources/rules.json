@@ -1,5 +1,6 @@
 {
   "_comment": "Cyber Shield – single editable source of truth for all detection data and scoring thresholds.",
+  "_humanReviewNote": "Kannada (kn) and Hindi (hi) phrases added below in digitalArrestPhrases, maliciousAppPhrases, urgencyPhrases, otpSolicitationPhrases, sensitiveDataPhrases, prizeBaitPhrases, and kycThreatPhrases are marked for human review.",
 
   "scoringThresholds": {
     "low": 0,
@@ -374,7 +375,17 @@
     "sim misuse",
     "move money to a safe account",
     "move money to safe account",
-    "your sim is used for illegal"
+    "your sim is used for illegal",
+    "ಡಿಜಿಟಲ್ ಅರೆಸ್ಟ್",
+    "ವಿಡಿಯೋ ಕರೆಯಲ್ಲಿಯೇ ಇರಿ",
+    "ಯಾರಿಗೂ ಹೇಳಬೇಡಿ",
+    "ಸುರಕ್ಷಿತ ಖಾತೆಗೆ ಹಣ ವರ್ಗಾಯಿಸಿ",
+    "ಪೊಲೀಸ್ ಕರೆ",
+    "डिजिटल अरेस्ट",
+    "वीडियो कॉल पर बने रहें",
+    "किसी को न बताएं",
+    "सुरक्षित खाते में पैसे ट्रांसफर करें",
+    "पुलिस कॉल"
   ],
 
   "maliciousAppPhrases": [
@@ -429,7 +440,13 @@
     "electricity app",
     "gas subsidy app",
     "fake bank app",
-    "kyc app download"
+    "kyc app download",
+    "ನಿಮ್ಮ ಸ್ಕ್ರೀನ್ ಶೇರ್ ಮಾಡಿ",
+    "ಸಪೋರ್ಟ್ ಆ್ಯಪ್ ಇನ್‌ಸ್ಟಾಲ್ ಮಾಡಿ",
+    "ಈ APK ಇನ್‌ಸ್ಟಾಲ್ ಮಾಡಿ",
+    "अपनी स्क्रीन शेयर करें",
+    "सपोर्ट ऐप इंस्टॉल करें",
+    "यह APK इंस्टॉल करें"
   ],
 
   "urgencyPhrases": [
@@ -457,7 +474,15 @@
     "non compliance",
     "legal action will be taken",
     "legal proceeding",
-    "police complaint"
+    "police complaint",
+    "ತಕ್ಷಣ ಕ್ರಮ ಕೈಗೊಳ್ಳಿ",
+    "ಇಂದೇ ಕೊನೆಯ ಅವಕಾಶ",
+    "ಕೂಡಲೇ ಪ್ರತಿಕ್ರಿಯಿಸಿ",
+    "ನಿರ್ಲಕ್ಷಿಸಬೇಡಿ",
+    "तुरंत कार्रवाई करें",
+    "आज आखिरी मौका है",
+    "अभी जवाब दें",
+    "देर न करें"
   ],
 
   "otpSolicitationPhrases": [
@@ -472,7 +497,13 @@
     "read out your otp",
     "your otp is needed",
     "confirm with otp",
-    "verify with otp"
+    "verify with otp",
+    "ನಿಮ್ಮ OTP ಹಂಚಿಕೊಳ್ಳಿ",
+    "ನಿಮ್ಮ OTP ಹೇಳಿ",
+    "OTP ನಮೂದಿಸಿ",
+    "अपना OTP बताएं",
+    "अपना OTP साझा करें",
+    "OTP दर्ज करें"
   ],
 
   "sensitiveDataPhrases": [
@@ -505,7 +536,13 @@
     "enter upi pin",
     "upi pin",
     "atm pin",
-    "your atm pin"
+    "your atm pin",
+    "ನಿಮ್ಮ UPI ಪಿನ್ ನಮೂದಿಸಿ",
+    "ನಿಮ್ಮ ಪಿನ್ ಹಂಚಿಕೊಳ್ಳಿ",
+    "ಆಧಾರ್ ಸಂಖ್ಯೆ ಕಳುಹಿಸಿ",
+    "अपना UPI पिन डालें",
+    "अपना पिन बताएं",
+    "आधार नंबर भेजें"
   ],
 
   "prizeBaitPhrases": [
@@ -531,7 +568,13 @@
     "income tax refund",
     "claim your refund",
     "refund approved",
-    "refund"
+    "refund",
+    "ನೀವು ಬಹುಮಾನ ಗೆದ್ದಿದ್ದೀರಿ",
+    "ಪ್ರೊಸೆಸಿಂಗ್ ಶುಲ್ಕ ಪಾವತಿಸಿ",
+    "ಲಾಟರಿ ಗೆದ್ದಿದ್ದೀರಿ",
+    "आप इनाम जीत गए हैं",
+    "प्रोसेसिंग फीस भरें",
+    "लॉटरी जीती है"
   ],
 
   "kycThreatPhrases": [
@@ -557,7 +600,15 @@
     "undelivered parcel",
     "undelivered package fee",
     "delivery failed pay",
-    "package on hold"
+    "package on hold",
+    "ನಿಮ್ಮ KYC ಮುಕ್ತಾಯಗೊಳ್ಳುತ್ತದೆ",
+    "ನಿಮ್ಮ ಖಾತೆ ಬ್ಲಾಕ್ ಆಗುತ್ತದೆ",
+    "ವಿದ್ಯುತ್ ಸಂಪರ್ಕ ಕಡಿತಗೊಳ್ಳುತ್ತದೆ",
+    "ಸಿಮ್ ಕಾರ್ಡ್ ಬ್ಲಾಕ್ ಆಗುತ್ತದೆ",
+    "आपका KYC खत्म हो रहा है",
+    "आपका खाता बंद हो जाएगा",
+    "बिजली कनेक्शन कट जाएगा",
+    "सिम कार्ड बंद हो जाएगा"
   ],
 
   "pressureCtaPhrases": [

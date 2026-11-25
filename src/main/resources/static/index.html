@@ -16,7 +16,7 @@
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap"
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&family=Noto+Sans+Kannada:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap"
         rel="stylesheet" />
 
   <link rel="stylesheet" href="css/styles.css" />
@@ -25,6 +25,12 @@
 <body>
 
   <a href="#check" class="skip-link">Skip to Scam Checker</a>
+
+  <!-- Non-blocking wake-up banner (shown after 3s if server is cold-starting) -->
+  <div id="wake-banner" class="wake-banner hidden" role="status" aria-live="polite">
+    <span id="wake-banner-spinner" class="uss-spinner" aria-hidden="true"></span>
+    <span id="wake-banner-text"></span>
+  </div>
 
   <!-- ═══════════════════════════════ HERO & NAV ═════════════════════════════ -->
   <header class="hero" id="top">
@@ -44,6 +50,7 @@
         <li><a href="#features">Features</a></li>
         <li><a href="#check">Check</a></li>
         <li><a href="#learn">Learn</a></li>
+        <li><a href="#verify">Verify</a></li>
         <li><a href="#report">Report</a></li>
       </ul>
       <a class="pill cta nav-cta" href="#check">CHECK NOW <span aria-hidden="true">&raquo;</span></a>
@@ -63,6 +70,7 @@
         <li><a href="#features" class="nav-menu-link">Features</a></li>
         <li><a href="#check" class="nav-menu-link">Check</a></li>
         <li><a href="#learn" class="nav-menu-link">Learn</a></li>
+        <li><a href="#verify" class="nav-menu-link">Verify</a></li>
         <li><a href="#report" class="nav-menu-link">Report</a></li>
       </ul>
       <div class="nav-menu-footer">
@@ -255,6 +263,8 @@
             <button type="button" class="btn-sample chip" data-sample="courier" aria-label="Load Courier Link sample" title="Simulates an undelivered parcel fee scam">Courier Link</button>
             <button type="button" class="btn-sample chip" data-sample="apk" aria-label="Load Malicious APK sample" title="Simulates a malicious utility APK install prompt">Malicious APK</button>
             <button type="button" class="btn-sample chip" data-sample="safe" aria-label="Load Safe Message sample" title="Simulates a legitimate team communication">Safe Message</button>
+            <button type="button" class="btn-sample chip" data-sample="kycKn" data-i18n="check.samples.kycKn" aria-label="Load Kannada KYC scam sample">ಕನ್ನಡ KYC ಮಾದರಿ</button>
+            <button type="button" class="btn-sample chip" data-sample="arrestHi" data-i18n="check.samples.arrestHi" aria-label="Load Hindi digital arrest scam sample">हिन्दी डिजिटल अरेस्ट</button>
           </div>
         </div>
 
@@ -312,6 +322,12 @@
           </svg>
           Your text is analysed in-memory on this server and never stored.
         </p>
+
+        <!-- Server readiness indicator for Check -->
+        <div id="check-server-status" class="check-server-status hidden" role="status" aria-live="polite">
+          <span id="check-server-spinner" class="uss-spinner" aria-hidden="true"></span>
+          <span id="check-server-text"></span>
+        </div>
       </div>
 
       <!-- Results area -->
@@ -478,8 +494,10 @@
             <div id="ml-details" class="ml-details"></div>
           </div>
 
-          <!-- Result Actions: Copy report -->
+          <!-- Result Actions: Practise / Play own / Copy report -->
           <div class="result-actions">
+            <button id="btn-practise-scam" class="pill hidden" type="button" data-i18n="check.practiseScamBtn">Practise this scam</button>
+            <button id="btn-play-own" class="pill hidden" type="button" data-i18n="check.playOwnBtn">Play your own message</button>
             <button id="btn-copy-result" class="btn-copy pill" type="button" aria-label="Copy analysis report to clipboard">
               <svg class="btn-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                 <path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z"/>
@@ -488,6 +506,12 @@
               <span>Copy result</span>
             </button>
             <span id="copy-hint" class="copy-hint" aria-live="polite"></span>
+          </div>
+
+          <!-- Helper & language notes -->
+          <div class="result-meta-notes">
+            <p id="result-helper-note" class="result-helper-note" data-i18n="check.helperNote">Rules plus a small ML model. A helper, not a guarantee.</p>
+            <p id="result-lang-note" class="result-lang-note hidden" data-i18n="check.detailsInEnglish"></p>
           </div>
 
           <!-- Disclaimer -->
@@ -510,139 +534,21 @@
 
   </main>
 
-  <!-- ═══════════════════════════════ LEARN SECTION (OFF-WHITE) ══════════════ -->
+  <!-- ═══════════════════════════════ LEARN GAME (OFF-WHITE) ════════════════ -->
   <section id="learn" class="learn-section" aria-labelledby="learn-heading">
     <!-- Smooth Dark-to-Light Transition -->
     <div class="dark-to-light-transition" aria-hidden="true"></div>
 
     <div class="container">
-      <div class="section-header reveal-group">
-        <span class="section-tag reveal-item">Citizen Awareness</span>
-        <h2 id="learn-heading" class="section-heading reveal-item">Learn Common Scams in India</h2>
-        <p class="section-sub reveal-item">Understand the deceptive mechanics behind phishing, digital arrest extortion, and rogue Android APKs.</p>
-      </div>
+      <div id="learn-root" class="learn-root" aria-live="polite"></div>
+    </div>
+  </section>
 
-      <div class="learn-grid reveal-group">
-
-        <!-- 1. How Phishing Works -->
-        <article class="learn-card reveal-item" tabindex="0">
-          <div class="learn-icon-box icon-phishing" aria-hidden="true">
-            <svg class="learn-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-              <polyline points="22,6 12,13 2,6"/>
-              <path d="M12 13v6a2 2 0 0 1-2 2H9"/>
-            </svg>
-          </div>
-          <h3 class="learn-card-title">How Phishing Works</h3>
-          <p class="learn-card-body">
-            Fraudsters mimic trusted banks (SBI, HDFC), payment apps (Paytm, PhonePe), or couriers to steal OTPs and credentials through fake links.
-          </p>
-          <ul class="learn-tips">
-            <li><strong>The Lure:</strong> Artificial panic like "account blocked in 24h" or "lottery reward".</li>
-            <li><strong>The Fake Link:</strong> Typosquatted lookalike URLs (e.g. <code>paytrn.com</code>, <code>sbi-verify.xyz</code>).</li>
-            <li><strong>The Theft:</strong> Harvesting OTPs, PINs, or CVVs to empty your bank accounts.</li>
-          </ul>
-        </article>
-
-        <!-- 2. How Digital Arrest Scams Work -->
-        <article class="learn-card reveal-item" tabindex="0">
-          <div class="learn-icon-box icon-arrest" aria-hidden="true">
-            <svg class="learn-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="2" y="3" width="20" height="14" rx="2"/>
-              <line x1="8" y1="21" x2="16" y2="21"/>
-              <line x1="12" y1="17" x2="12" y2="21"/>
-              <path d="M10 9l5 3-5 3V9z" fill="currentColor"/>
-            </svg>
-          </div>
-          <h3 class="learn-card-title">How Digital Arrest Scams Work</h3>
-          <p class="learn-card-body">
-            Scammers pose as CBI, Police, NCB, or Customs officers and falsely claim your Aadhaar or SIM was used in a drug parcel or money laundering case.
-          </p>
-          <ul class="learn-tips">
-            <li><strong>Video Call Con:</strong> Demands to "stay on Skype/WhatsApp video call" with fake police backdrops.</li>
-            <li><strong>Secrecy:</strong> Strict orders of "do not tell anyone" to isolate victims from family and lawyers.</li>
-            <li><strong>Extortion:</strong> Coercing victims to transfer money to a "safe government account" for verification.</li>
-          </ul>
-        </article>
-
-        <!-- 3. How to Spot Malicious Apps -->
-        <article class="learn-card reveal-item" tabindex="0">
-          <div class="learn-icon-box icon-app" aria-hidden="true">
-            <svg class="learn-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
-              <line x1="12" y1="18" x2="12.01" y2="18"/>
-              <path d="M12 6v6m-3-3l3 3 3-3"/>
-            </svg>
-          </div>
-          <h3 class="learn-card-title">How to Spot Malicious Apps</h3>
-          <p class="learn-card-body">
-            Attackers trick users into installing rogue APK files or remote desktop tools disguised as customer service, electricity, or KYC apps.
-          </p>
-          <ul class="learn-tips">
-            <li><strong>Sideloading:</strong> Urging you to "enable unknown sources" and install an <code>.apk</code> link.</li>
-            <li><strong>Remote Access:</strong> Pushing AnyDesk, TeamViewer, or QuickSupport to take over your screen.</li>
-            <li><strong>Dangerous Permissions:</strong> Requesting Accessibility or SMS permissions to steal incoming OTPs.</li>
-          </ul>
-        </article>
-
-      </div><!-- /learn-grid -->
-
-      <!-- 4. Golden Rules Checklist -->
-      <article class="golden-rules-card reveal-group" tabindex="0">
-        <div class="golden-rules-header">
-          <div class="learn-icon-box icon-checklist" aria-hidden="true">
-            <svg class="learn-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-              <path d="m9 12 2 2 4-4"/>
-            </svg>
-          </div>
-          <div>
-            <h3 class="golden-rules-title">Golden Rules Security Checklist</h3>
-            <p class="golden-rules-sub">Core safety principles to protect yourself and your family across every digital transaction:</p>
-          </div>
-        </div>
-
-        <ul class="golden-rules-grid">
-          <li class="golden-rule-item">
-            <svg class="golden-check-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-            </svg>
-            <div><strong>Never share OTPs or PINs</strong> &mdash; Legitimate banks, RBI, and telecom operators NEVER ask for OTPs, CVVs, or ATM PINs.</div>
-          </li>
-          <li class="golden-rule-item">
-            <svg class="golden-check-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-            </svg>
-            <div><strong>Digital arrest is fake</strong> &mdash; Indian law enforcement (Police, CBI, ED, Courts) NEVER conducts arrests or trials over video calls.</div>
-          </li>
-          <li class="golden-rule-item">
-            <svg class="golden-check-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-            </svg>
-            <div><strong>Never install APK links</strong> &mdash; Only download software through official app stores (Google Play Store or Apple App Store).</div>
-          </li>
-          <li class="golden-rule-item">
-            <svg class="golden-check-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-            </svg>
-            <div><strong>Verify URL spelling</strong> &mdash; Always check the exact domain name character-by-character before entering credentials.</div>
-          </li>
-          <li class="golden-rule-item">
-            <svg class="golden-check-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-            </svg>
-            <div><strong>Pause on artificial urgency</strong> &mdash; Threats of electricity disconnection or immediate block are designed to trigger hasty mistakes.</div>
-          </li>
-          <li class="golden-rule-item">
-            <svg class="golden-check-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-            </svg>
-            <div><strong>Call verified numbers only</strong> &mdash; Dial the fraud helpline on the back of your physical debit card, never numbers found on Google.</div>
-          </li>
-        </ul>
-      </article>
-
-    </div><!-- /container -->
+  <!-- ═══════════════════════════════ VERIFY MODULE ═════════════════════════ -->
+  <section id="verify" class="verify-section" aria-labelledby="verify-heading">
+    <div class="container">
+      <div id="verify-root" class="verify-root" aria-live="polite"></div>
+    </div>
   </section>
 
   <!-- ═══════════════════════════════ REPORT SECTION (INDIA) ═════════════════ -->
@@ -736,6 +642,10 @@
   </footer>
 
   <script src="js/vortex.js"></script>
+  <script type="module" src="js/health.js"></script>
   <script type="module" src="js/app.js"></script>
+  <script type="module" src="js/learn.js"></script>
+  <script type="module" src="js/verify.js"></script>
+  <script type="module" src="js/presenter.js"></script>
 </body>
 </html>

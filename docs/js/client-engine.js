@@ -508,12 +508,13 @@ export async function runClientSideAnalysis(text, useMl = true) {
   }
 
   // Summary
-  let summary = 'A few minor patterns were noted. Treat with light caution.';
-  if (distinct.length === 0) summary = 'No suspicious patterns detected. Always stay vigilant.';
+  let summary = 'No strong red flags found. Still verify in your bank app.';
+  if (distinct.length === 0) summary = 'No strong red flags found. Still verify in your bank app.';
   else if (isDigitalArrestCombo) summary = 'Critical threat detected: Coercive law enforcement impersonation demanding secret money transfer. A real agency never arrests over a video call and never asks for payment to a private account.';
   else if (level === 'CRITICAL') summary = 'Extremely high risk. This is very likely a scam. Stop all interaction.';
   else if (level === 'HIGH') summary = 'Multiple high-risk signals detected. Do not click links or share data.';
   else if (level === 'MEDIUM') summary = 'Several suspicious patterns found. Verify before acting.';
+  else if (level === 'LOW') summary = 'No strong red flags found. Still verify in your bank app.';
 
   // Scam type
   let scamType = 'SAFE';
