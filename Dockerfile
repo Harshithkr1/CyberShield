@@ -2,9 +2,11 @@
 # Stage 1: Build stage with Maven and Eclipse Temurin JDK 17
 FROM maven:3.9-eclipse-temurin-17 AS build
 WORKDIR /app
+COPY settings.xml /root/.m2/settings.xml
 
 # Copy pom.xml and source code
 COPY pom.xml .
+RUN mvn -B dependency:go-offline
 COPY src ./src
 
 # Package application without running tests
