@@ -1,0 +1,16 @@
+{
+  "name": "cybershield-frontend-assets",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Offline QR decoding and sample PNG generation for Cyber Shield Safety Check",
+  "scripts": {
+    "generate:qr-samples": "node scripts/generate-qr-samples.mjs"
+  },
+  "dependencies": {
+    "jsqr": "^1.4.0"
+  },
+  "devDependencies": {
+    "qrcode": "^1.5.4"
+  }
+}
+

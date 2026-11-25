@@ -91,6 +91,7 @@ public class PayOrderService {
 
     // In-memory order store for field-level tamper comparison; cleared on Render free-tier cold starts.
     private final Map<String, StoredOrder> orderStore = new ConcurrentHashMap<>();
+    private final Map<String, StoredOrder> orderStoreByRef = new ConcurrentHashMap<>();
 
     @Autowired
     public PayOrderService(
@@ -163,7 +164,9 @@ public class PayOrderService {
                 + B64U_ENC.encodeToString(signatureBytes);
 
         evictExpired(ts);
-        orderStore.put(storeKey(tr, ts), new StoredOrder(payload, expiresAt));
+        StoredOrder entry = new StoredOrder(payload, expiresAt);
+        orderStore.put(storeKey(tr, ts), entry);
+        orderStoreByRef.put(tr, entry);
 
         String qrPngBase64 = renderQrPngBase64(token);
         return new OrderResponse(payload, canonical, signatureHex, expiresAt, qrPngBase64);
@@ -202,6 +205,9 @@ public class PayOrderService {
                 && MessageDigest.isEqual(providedSig, expectedSig);
 
         StoredOrder stored = orderStore.get(storeKey(payload.tr(), payload.ts()));
+        if (stored == null) {
+            stored = orderStoreByRef.get(payload.tr());
+        }
         if (!sigMatches) {
             if (stored == null) {
                 return unknownOrder(null);
@@ -282,6 +288,7 @@ public class PayOrderService {
 
     private void evictExpired(long nowMillis) {
         orderStore.entrySet().removeIf(entry -> nowMillis > entry.getValue().expiresAt());
+        orderStoreByRef.entrySet().removeIf(entry -> nowMillis > entry.getValue().expiresAt());
     }
 
     private static String storeKey(String ref, long ts) {

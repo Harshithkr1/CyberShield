@@ -1,0 +1,17 @@
+{
+  "_comment": "Fictional Demo Bank registry for client-side verification assistant demos only. Not real NPCI/PSP data.",
+  "bankLabel": "Demo Bank (fictional)",
+  "entries": {
+    "demo-shop@csbank": "Cyber Shield Demo Store",
+    "qwe978xyz@ybl": "Ravi Kumar",
+    "ravi.stores@demobank": "Ravi Stores",
+    "ravi@demobank": "Ravi Stores",
+    "metro.bazaar@okaxis": "Metro Bazaar",
+    "ananya.tailors@demobank": "Ananya Tailoring Works",
+    "city.pharma@demobank": "City Care Pharmacy",
+    "sharma.hardware@demobank": "Sharma Hardware & Tools",
+    "lakshmi.fruits@demobank": "Lakshmi Fresh Fruits",
+    "freshkart.demo@csbank": "FreshKart Demo Mart"
+  }
+}
+
