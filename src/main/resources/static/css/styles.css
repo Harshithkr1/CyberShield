@@ -131,6 +131,11 @@ body {
   flex-direction: column;
 }
 
+.hidden,
+[hidden] {
+  display: none !important;
+}
+
 /* Skip to Main Content (Accessibility) */
 .skip-link {
   position: absolute;

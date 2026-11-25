@@ -1137,6 +1137,100 @@ function render() {
 
 // ── Global API & Initialization ───────────────────────────────────────────
 
+const SCAM_ALIASES = {
+  kyc: 'kyc-sms',
+  'kyc-fraud': 'kyc-sms',
+  courier: 'kyc-sms',
+  smishing: 'kyc-sms',
+  phishing: 'kyc-sms',
+  arrest: 'digital-arrest',
+  'digital-arrest': 'digital-arrest',
+  apk: 'cloned-app',
+  'malicious-app': 'cloned-app',
+  'malicious-apk': 'cloned-app'
+};
+
+function resolveScenarioId(rawId) {
+  if (!state.loaded || state.scenarios.length === 0) return rawId;
+  const key = String(rawId || '').trim().toLowerCase();
+  if (state.byId.has(rawId)) return rawId;
+  if (SCAM_ALIASES[key] && state.byId.has(SCAM_ALIASES[key])) return SCAM_ALIASES[key];
+  return state.scenarios[0].id;
+}
+
+function buildLearnUrl(mode, scamId, lang) {
+  const url = new URL(window.location.href);
+  url.searchParams.set('mode', mode);
+  url.searchParams.set('scam', scamId);
+  url.searchParams.set('lang', lang);
+  url.hash = '#learn';
+  return url.toString();
+}
+
+async function openScenarioWithOptions(id, opts = {}) {
+  await initPromise;
+  if (!state.loaded || state.scenarios.length === 0) return;
+
+  const targetId = resolveScenarioId(id);
+  const scenario = state.byId.get(targetId);
+  const targetMode = opts.mode === 'simple' ? 'simple' : 'challenge';
+
+  const requestedLang = opts.lang || getLang() || 'en';
+  const supportedLang = (scenario && scenario.message && scenario.message[requestedLang])
+    ? requestedLang
+    : 'en';
+
+  if (getLang() !== supportedLang) {
+    await setLang(supportedLang);
+  }
+  if (state.mode !== targetMode) {
+    state.mode = targetMode;
+    writeMode(targetMode);
+    applyModeBodyClass();
+  }
+
+  if (opts.pushHistory && window.history && typeof window.history.pushState === 'function') {
+    const checkUrl = new URL(window.location.href);
+    checkUrl.searchParams.delete('mode');
+    checkUrl.searchParams.delete('scam');
+    checkUrl.searchParams.delete('lang');
+    checkUrl.hash = '#check';
+    if (window.location.hash !== '#check' || window.location.search.includes('scam=')) {
+      window.history.replaceState({ ussView: 'check' }, '', checkUrl.toString());
+    }
+    window.history.pushState(
+      { ussView: 'learn', mode: targetMode, scam: targetId, lang: supportedLang },
+      '',
+      buildLearnUrl(targetMode, targetId, supportedLang)
+    );
+  }
+
+  const learnSection = document.getElementById('learn');
+  if (learnSection) {
+    learnSection.scrollIntoView({ behavior: prefersReducedMotion() ? 'auto' : 'smooth' });
+  }
+  startRun([targetId], true);
+}
+
+async function applyUrlParams(scrollToLearn = true) {
+  const params = new URLSearchParams(window.location.search);
+  const rawScam = params.get('scam');
+  const rawMode = params.get('mode');
+  if (!rawScam && !rawMode) return false;
+
+  await openScenarioWithOptions(rawScam || '', {
+    mode: rawMode === 'simple' ? 'simple' : 'challenge',
+    lang: params.get('lang') || undefined,
+    pushHistory: false
+  });
+  if (!scrollToLearn) return true;
+  const learnSection = document.getElementById('learn');
+  if (learnSection) {
+    learnSection.scrollIntoView({ behavior: 'auto' });
+  }
+  return true;
+}
+
 const initPromise = (async () => {
   applyModeBodyClass();
   await Promise.all([initI18n(), loadScenarios()]);
@@ -1144,18 +1238,36 @@ const initPromise = (async () => {
   render();
 })();
 
-window.USS = window.USS || {};
-window.USS.startScenario = async (id) => {
+initPromise.then(() => {
+  applyUrlParams(true);
+});
+
+window.addEventListener('popstate', async () => {
   await initPromise;
-  const learnSection = document.getElementById('learn');
-  if (learnSection) {
-    learnSection.scrollIntoView({ behavior: prefersReducedMotion() ? 'auto' : 'smooth' });
+  const params = new URLSearchParams(window.location.search);
+  if (params.has('scam') || params.has('mode')) {
+    await applyUrlParams(true);
+    return;
   }
-  if (state.loaded && state.byId.has(id)) {
-    startRun([id], true);
-  } else if (state.loaded) {
-    startRun(state.scenarios.map((s) => s.id), false);
+  stopTimer();
+  state.screen = 'start';
+  render();
+  const resultCard = document.getElementById('result-card');
+  const checkTarget = (resultCard && !resultCard.classList.contains('hidden'))
+    ? resultCard
+    : document.getElementById('check');
+  if (checkTarget) {
+    checkTarget.scrollIntoView({ behavior: prefersReducedMotion() ? 'auto' : 'smooth', block: 'start' });
   }
+});
+
+window.USS = window.USS || {};
+window.USS.startScenario = async (id, opts = {}) => {
+  await openScenarioWithOptions(id, {
+    mode: opts.mode || 'challenge',
+    lang: opts.lang,
+    pushHistory: opts.pushHistory !== false
+  });
 };
 window.USS.startCustomScenario = async (customScenario) => {
   await initPromise;

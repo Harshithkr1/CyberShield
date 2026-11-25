@@ -6,7 +6,8 @@
  */
 
 import { analyzeText } from './api.js';
-import { showEmpty, showLoading, showError, showResult } from './ui.js';
+import { runClientSideAnalysis } from './client-engine.js';
+import { showEmpty, showLoading, showResult } from './ui.js';
 
 // ── DOM references ────────────────────────────────────────────────────────
 
@@ -247,17 +248,14 @@ inputText.addEventListener('keydown', (e) => {
 async function handleAnalyze() {
   const text = inputText.value.trim();
 
-  // Client-side guard (server validates too, but give instant feedback)
   if (!text) {
-    showError('Please paste some text or a link before analysing.');
+    showEmpty();
+    inputText.focus();
     return;
   }
-  if (text.length > MAX_CHARS) {
-    showError(`Text is too long (${text.length} chars). Maximum is ${MAX_CHARS} characters.`);
-    return;
-  }
+  const submittedText = text.length > MAX_CHARS ? text.slice(0, MAX_CHARS) : text;
 
-  const useMl = useMlToggle.checked;
+  const useMl = useMlToggle ? useMlToggle.checked : false;
 
   const resultsArea = document.getElementById('results-area');
   if (resultsArea) resultsArea.setAttribute('aria-busy', 'true');
@@ -273,10 +271,15 @@ async function handleAnalyze() {
   }
 
   try {
-    const result = await analyzeText(text, useMl);
-    showResult(result, text);
+    let result;
+    try {
+      result = await analyzeText(submittedText, useMl);
+    } catch (err) {
+      console.error('[CyberShield] Analysis error; falling back to local rules engine:', err);
+      result = await runClientSideAnalysis(submittedText, useMl);
+    }
+    showResult(result, submittedText);
 
-    // When the result arrives call setMood(level.toLowerCase()) and pulse(), then scroll to the results
     const level = String(result.level || 'low').toLowerCase();
     if (window.cyberVortex) {
       window.cyberVortex.setMood(level);
@@ -286,11 +289,6 @@ async function handleAnalyze() {
     const resultCard = document.getElementById('result-card');
     if (resultCard) {
       resultCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-  } catch (err) {
-    showError(err.message ?? 'An unexpected error occurred. Please try again.');
-    if (window.cyberVortex) {
-      window.cyberVortex.setMood('calm');
     }
   } finally {
     setAnalyzeButtonState(false);

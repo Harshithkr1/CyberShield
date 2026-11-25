@@ -61,24 +61,9 @@ function renderWakeBanner() {
 
 function renderCheckSpinner() {
   const checkStatus = document.getElementById('check-server-status');
-  const checkText = document.getElementById('check-server-text');
-  const checkSpinner = document.getElementById('check-server-spinner');
-  if (!checkStatus || !checkText) return;
-
-  if (currentStatus === 'ready' || currentStatus === 'static') {
+  if (checkStatus) {
+    // Check now runs with automatic in-browser fallback, so never block on server status
     checkStatus.classList.add('hidden');
-    return;
-  }
-
-  checkStatus.classList.remove('hidden');
-  if (currentStatus === 'unreachable') {
-    checkStatus.classList.add('is-error');
-    if (checkSpinner) checkSpinner.classList.add('hidden');
-    checkText.textContent = t('health.unreachable');
-  } else {
-    checkStatus.classList.remove('is-error');
-    if (checkSpinner) checkSpinner.classList.remove('hidden');
-    checkText.textContent = currentStatus === 'waking' ? t('health.waking') : t('health.checking');
   }
 }
 
@@ -109,7 +94,7 @@ async function pingOnce() {
 }
 
 async function runHealthLoop() {
-  await initI18n();
+  await initI18n().catch(() => {});
   onLangChange(() => {
     renderWakeBanner();
     renderCheckSpinner();

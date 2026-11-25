@@ -123,7 +123,7 @@
     }
   },
   "check": {
-    "noStrongFlags": "No strong red flags found. Still verify in your bank app.",
+    "noStrongFlags": "No red flags found. Still verify in your official bank app.",
     "helperNote": "नियम और एक छोटा ML मॉडल। यह केवल मददगार है, पक्की गारंटी नहीं।",
     "detailsInEnglish": "विवरण अंग्रेजी में दिखाए गए हैं (Details are shown in English).",
     "practiseScamBtn": "इस ठगी का अभ्यास करें",
@@ -262,4 +262,3 @@
     "resetDone": "uss.* डेमो डेटा साफ हो गया।"
   }
 }
-

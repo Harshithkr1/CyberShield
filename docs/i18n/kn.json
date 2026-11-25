@@ -123,7 +123,7 @@
     }
   },
   "check": {
-    "noStrongFlags": "No strong red flags found. Still verify in your bank app.",
+    "noStrongFlags": "No red flags found. Still verify in your official bank app.",
     "helperNote": "ನಿಯಮಗಳು ಮತ್ತು ಸಣ್ಣ ML ಮಾದರಿ. ಇದು ಸಹಾಯಕ ಮಾತ್ರ, ಸಂಪೂರ್ಣ ಭರವಸೆಯಲ್ಲ.",
     "detailsInEnglish": "ವಿವರಗಳನ್ನು ಇಂಗ್ಲಿಷ್‌ನಲ್ಲಿ ತೋರಿಸಲಾಗಿದೆ (Details are shown in English).",
     "practiseScamBtn": "ಈ ವಂಚನೆಯನ್ನು ಅಭ್ಯಾಸ ಮಾಡಿ",

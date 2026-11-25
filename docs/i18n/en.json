@@ -123,7 +123,7 @@
     }
   },
   "check": {
-    "noStrongFlags": "No strong red flags found. Still verify in your bank app.",
+    "noStrongFlags": "No red flags found. Still verify in your official bank app.",
     "helperNote": "Rules plus a small ML model. A helper, not a guarantee.",
     "detailsInEnglish": "Details are shown in English.",
     "practiseScamBtn": "Practise this scam",

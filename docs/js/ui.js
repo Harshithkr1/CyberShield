@@ -15,8 +15,6 @@ const $ = (id) => document.getElementById(id);
 
 const emptyState = $('empty-state');
 const loadingState = $('loading-state');
-const errorState = $('error-state');
-const errorMsg = $('error-message');
 const resultCard = $('result-card');
 
 const gaugeArc = $('gauge-arc');
@@ -70,7 +68,7 @@ const SVG_NS = 'http://www.w3.org/2000/svg';
 
 /** Hide every result-area child, then show the requested one. */
 function showOnly(el) {
-  [emptyState, loadingState, errorState, resultCard].forEach((node) => {
+  [emptyState, loadingState, resultCard].forEach((node) => {
     if (node) node.classList.toggle('hidden', node !== el);
   });
 }
@@ -81,13 +79,6 @@ export function showEmpty() {
 
 export function showLoading() {
   showOnly(loadingState);
-}
-
-export function showError(message) {
-  if (errorMsg) {
-    errorMsg.textContent = message || 'An unexpected error occurred. Please verify your message and try again.';
-  }
-  showOnly(errorState);
 }
 
 // ── Helper: Safe SVG Icon Creator ─────────────────────────────────────────
@@ -120,7 +111,7 @@ export function showResult(result, originalText = '') {
 
   const score = typeof result.score === 'number' ? result.score : 0;
   const level = result.level ?? 'LOW';
-  const type = result.scamType ?? 'SAFE';
+  const type = result.scamType ?? 'NONE';
   const summary = result.summary ?? '';
   const signals = Array.isArray(result.signals) ? result.signals : [];
   const urls = Array.isArray(result.urls) ? result.urls : [];
@@ -139,16 +130,17 @@ export function showResult(result, originalText = '') {
   // 3. Risk badge with text label & icon, plus scam type label
   renderRiskBadge(level);
 
+  const lowMsg = tOr('check.noStrongFlags', 'No red flags found. Still verify in your official bank app.');
+
   if (scamType) {
-    scamType.textContent = type && type !== 'SAFE'
+    scamType.textContent = type && type !== 'SAFE' && type !== 'NONE'
       ? `Threat Vector: ${formatScamType(type)}`
-      : tOr('check.noStrongFlags', 'No strong red flags found. Still verify in your bank app.');
+      : lowMsg;
   }
 
   // 4. One-line summary
   if (resultSummary) {
-    const lowMsg = tOr('check.noStrongFlags', 'No strong red flags found. Still verify in your bank app.');
-    resultSummary.textContent = level === 'LOW' ? lowMsg : (summary || lowMsg);
+    resultSummary.textContent = (signals.length === 0 || level === 'LOW') ? lowMsg : (summary || lowMsg);
   }
 
   // 5. Render highlighted message (textContent only, zero innerHTML) & legend
@@ -472,7 +464,7 @@ function renderSignalsList(signals) {
     emptyNotice.className = 'signals-empty-card';
     const msg = document.createElement('p');
     msg.className = 'signal-explanation';
-    msg.textContent = tOr('check.noStrongFlags', 'No strong red flags found. Still verify in your bank app.');
+    msg.textContent = tOr('check.noStrongFlags', 'No red flags found. Still verify in your official bank app.');
     emptyNotice.appendChild(msg);
     signalsList.appendChild(emptyNotice);
     signalsSection.classList.remove('hidden');
@@ -737,7 +729,7 @@ function getActionSteps(level, scamType) {
   if (normType.includes('DIGITAL_ARREST')) {
     return [
       'Disconnect the video call or hang up immediately. Real police, CBI, ED, and courts NEVER conduct trials or arrest anyone over video calls.',
-      'Never transfer money to any "safe account", "RBI verification account", or private bank details. Real government agencies never ask for funds to clear cases.',
+      'Never transfer money to any "protected account", "RBI verification account", or private bank details. Real government agencies never ask for funds to clear cases.',
       'Report this incident immediately to the National Cyber Crime Helpline by dialling 1930 or filing a complaint at cybercrime.gov.in.',
       'If you shared sensitive identity (Aadhaar/PAN) or banking information, inform your bank right away to monitor and protect your accounts.'
     ];
@@ -780,7 +772,7 @@ function getActionSteps(level, scamType) {
     case 'LOW':
     default:
       return [
-        tOr('check.noStrongFlags', 'No strong red flags found. Still verify in your bank app.'),
+        tOr('check.noStrongFlags', 'No red flags found. Still verify in your official bank app.'),
         'Never share passwords, banking PINs, or OTPs with anyone.',
         'Always check the sender’s full address and verify links before clicking.'
       ];
@@ -792,7 +784,7 @@ function getActionSteps(level, scamType) {
 function prepareCopyReport(result, originalText) {
   const score = result.score ?? 0;
   const level = result.level ?? 'LOW';
-  const type = formatScamType(result.scamType ?? 'SAFE');
+  const type = formatScamType(result.scamType ?? 'NONE');
   const summary = result.summary ?? '';
   const signals = result.signals ?? [];
   const urls = result.urls ?? [];
@@ -822,7 +814,7 @@ function prepareCopyReport(result, originalText) {
 
   lines.push(`Why this score (${signals.length} indicators):`);
   if (signals.length === 0) {
-    lines.push(`• ${tOr('check.noStrongFlags', 'No strong red flags found. Still verify in your bank app.')}`);
+    lines.push(`• ${tOr('check.noStrongFlags', 'No red flags found. Still verify in your official bank app.')}`);
   } else {
     signals.forEach((s) => {
       lines.push(`• [${s.category ?? 'SIGNAL'}] (+${s.points ?? 0} pts) ${s.explanation ?? ''}`);
@@ -1032,7 +1024,11 @@ function formatCategory(cat) {
 }
 
 function formatScamType(key) {
-  return String(key || '')
+  const norm = String(key || '').toUpperCase();
+  if (!norm || norm === 'SAFE' || norm === 'NONE') {
+    return 'No Red Flags Detected';
+  }
+  return String(key)
     .toLowerCase()
     .replace(/_/g, ' ')
     .replace(/\b\w/g, (c) => c.toUpperCase());
@@ -1158,6 +1154,13 @@ function updateResultLanguageNotes() {
 
 onLangChange(updateResultLanguageNotes);
 
+function detectMessageLanguage(text) {
+  const sample = String(text || '');
+  if (/[\u0C80-\u0CFF]/.test(sample)) return 'kn';
+  if (/[\u0900-\u097F]/.test(sample)) return 'hi';
+  return 'en';
+}
+
 function renderLearnBridge(result, originalText) {
   updateResultLanguageNotes();
 
@@ -1168,8 +1171,9 @@ function renderLearnBridge(result, originalText) {
     btnPractiseScam.classList.remove('hidden');
     btnPractiseScam.onclick = () => {
       const scenarioId = mapResultToScenarioId(result);
+      const lang = detectMessageLanguage(originalText);
       if (window.USS && typeof window.USS.startScenario === 'function') {
-        window.USS.startScenario(scenarioId);
+        window.USS.startScenario(scenarioId, { mode: 'challenge', lang, pushHistory: true });
       }
     };
   }
