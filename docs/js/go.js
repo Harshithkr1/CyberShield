@@ -1,7 +1,7 @@
 /**
  * go.js – "Check before you go" client-side link gate for go.html.
- * Static & browser-only: never sends destination URLs to any server, never logs
- * or stores inspected URLs, and never redirects automatically.
+ * Controls real DOM elements defined in go.html via .hidden class toggles.
+ * Never auto-redirects, never logs/stores inspected URLs, never sends URLs to a server.
  */
 
 import { initI18n, t, getLang, setLang, onLangChange } from './i18n.js';
@@ -17,16 +17,16 @@ import {
 const MODE_STORAGE_KEY = 'uss.mode';
 const DEMO_RISKY_URL = 'https://upi-kyc-in.top/update';
 
-const root = document.getElementById('go-root');
+const $ = (id) => document.getElementById(id);
 
 const state = {
   mode: readMode(),
-  status: 'loading', // 'empty' | 'blocked' | 'analyzing' | 'ready'
+  status: 'empty', // 'empty' | 'blocked' | 'analyzing' | 'ready' | 'analysis_failed'
   url: '',
   parsed: null,
   analysis: null,
   mediumAccepted: false,
-  highStep: 0 // 0 = hidden, 1 = confirm shown, 2 = link revealed
+  highStep: 0
 };
 
 function readMode() {
@@ -52,11 +52,17 @@ function applyModeClass() {
   document.body.classList.toggle('uss-simple', state.mode === 'simple');
 }
 
-function el(tag, className, text) {
-  const node = document.createElement(tag);
-  if (className) node.className = className;
-  if (text !== undefined && text !== null) node.textContent = text;
-  return node;
+function tOr(key, fallback, vars) {
+  try {
+    const val = t(key, vars);
+    return val && val !== key ? val : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function setHidden(el, hidden) {
+  if (el) el.classList.toggle('hidden', Boolean(hidden));
 }
 
 function mapUrlResultToScenario(result) {
@@ -70,9 +76,7 @@ function mapUrlResultToScenario(result) {
 
 function translateSignalReason(sig) {
   const key = `go.signals.${sig.id}`;
-  const mapped = t(key);
-  if (mapped && mapped !== key) return mapped;
-  return sig.explanation || t('go.signals.generic');
+  return tOr(key, sig.explanation || tOr('go.signals.generic', 'Suspicious link pattern identified.'));
 }
 
 function goBackAction() {
@@ -90,6 +94,34 @@ function goBackAction() {
   window.location.href = './index.html#check';
 }
 
+function bindStaticListeners() {
+  $('go-mode-simple')?.addEventListener('click', () => setMode('simple'));
+  $('go-mode-challenge')?.addEventListener('click', () => setMode('challenge'));
+  $('go-lang-en')?.addEventListener('click', () => { Promise.resolve(setLang('en')).catch(() => {}); });
+  $('go-lang-kn')?.addEventListener('click', () => { Promise.resolve(setLang('kn')).catch(() => {}); });
+  $('go-lang-hi')?.addEventListener('click', () => { Promise.resolve(setLang('hi')).catch(() => {}); });
+  $('go-back-btn')?.addEventListener('click', goBackAction);
+
+  $('go-demo-risky-btn')?.addEventListener('click', () => {
+    window.location.hash = `u=${encodeBase64UrlUtf8(DEMO_RISKY_URL)}`;
+  });
+
+  $('go-ack-btn')?.addEventListener('click', () => {
+    state.mediumAccepted = true;
+    render();
+  });
+
+  $('go-show-anyway-btn')?.addEventListener('click', () => {
+    state.highStep = 1;
+    render();
+  });
+
+  $('go-confirm-btn')?.addEventListener('click', () => {
+    state.highStep = 2;
+    render();
+  });
+}
+
 async function inspectCurrentHash() {
   state.mediumAccepted = false;
   state.highStep = 0;
@@ -97,7 +129,15 @@ async function inspectCurrentHash() {
   state.url = '';
   state.parsed = null;
 
-  const rawParam = extractFragmentParam(window.location.hash, 'u');
+  let rawParam = '';
+  try {
+    rawParam = extractFragmentParam(window.location.hash, 'u');
+  } catch {
+    state.status = 'blocked';
+    render();
+    return;
+  }
+
   if (!rawParam) {
     state.status = 'empty';
     render();
@@ -126,244 +166,238 @@ async function inspectCurrentHash() {
   render();
 
   const targetSnapshot = checked.url;
-  const result = await runClientSideAnalysis(targetSnapshot, true);
-  if (state.url !== targetSnapshot) return;
-
-  state.analysis = result;
-  state.status = 'ready';
+  try {
+    const result = await runClientSideAnalysis(targetSnapshot, true);
+    if (state.url !== targetSnapshot) return;
+    if (!result || typeof result.level !== 'string') {
+      throw new Error('Invalid analysis response');
+    }
+    state.analysis = result;
+    state.status = 'ready';
+  } catch {
+    if (state.url !== targetSnapshot) return;
+    state.analysis = null;
+    state.status = 'analysis_failed';
+  }
   render();
 }
 
-function renderTopControls() {
-  const bar = el('div', 'go-topbar');
-
-  const modeWrap = el('div', 'go-mode-group');
-  modeWrap.setAttribute('role', 'group');
-  for (const m of ['simple', 'challenge']) {
-    const btn = el('button', `learn-toggle-pill${state.mode === m ? ' is-active' : ''}`, t(`mode.${m}`));
-    btn.type = 'button';
-    btn.addEventListener('click', () => setMode(m));
-    modeWrap.appendChild(btn);
-  }
-
-  const langWrap = el('div', 'pay-demo-langbar');
-  const activeLang = getLang();
+function renderTopBarState() {
+  $('go-mode-simple')?.classList.toggle('is-active', state.mode === 'simple');
+  $('go-mode-challenge')?.classList.toggle('is-active', state.mode === 'challenge');
+  const lang = getLang();
   for (const code of ['en', 'kn', 'hi']) {
-    const btn = el('button', `learn-toggle-pill${activeLang === code ? ' is-active' : ''}`, t(`lang.${code}`));
-    btn.type = 'button';
-    btn.addEventListener('click', () => setLang(code));
-    langWrap.appendChild(btn);
+    $(`go-lang-${code}`)?.classList.toggle('is-active', lang === code);
   }
-
-  bar.appendChild(modeWrap);
-  bar.appendChild(langWrap);
-  return bar;
 }
 
-function renderDemoLinkBar() {
-  const box = el('div', 'go-demo-box');
-  const demoBtn = el('button', 'verify-chip go-demo-btn', t('go.tryRiskyBtn'));
-  demoBtn.type = 'button';
-  demoBtn.addEventListener('click', () => {
-    window.location.hash = `u=${encodeBase64UrlUtf8(DEMO_RISKY_URL)}`;
-  });
-  box.appendChild(demoBtn);
-  box.appendChild(el('span', 'go-demo-hint', t('go.tryRiskyHint')));
-  return box;
+function renderDestinationBox() {
+  const destBox = $('go-dest-box');
+  if (!state.url || !state.parsed) {
+    setHidden(destBox, true);
+    return;
+  }
+  const beforeEl = $('go-dest-before');
+  const hostEl = $('go-dest-host');
+  const afterEl = $('go-dest-after');
+
+  try {
+    const parts = splitUrlHostParts(state.parsed);
+    if (beforeEl) beforeEl.textContent = parts.beforeHost;
+    if (hostEl) hostEl.textContent = parts.host;
+    if (afterEl) afterEl.textContent = parts.afterHost;
+  } catch {
+    if (beforeEl) beforeEl.textContent = state.url;
+    if (hostEl) hostEl.textContent = '';
+    if (afterEl) afterEl.textContent = '';
+  }
+  setHidden(destBox, false);
 }
 
-function renderContinueControl(level) {
-  const wrap = el('div', 'go-continue-wrap');
-  const buildContinueAnchor = () => {
-    const a = document.createElement('a');
-    a.className = 'go-continue-link learn-btn-secondary';
-    a.href = state.url;
-    a.rel = 'noopener noreferrer';
-    a.textContent = t('go.continueBtn');
-    return a;
-  };
+function renderContinueControls(hasValidHttpUrl, level) {
+  const wrap = $('go-continue-wrap');
+  const ackBtn = $('go-ack-btn');
+  const showAnywayBtn = $('go-show-anyway-btn');
+  const confirmBox = $('go-confirm-box');
+  const continueLink = $('go-continue-link');
 
-  if (level === 'LOW') {
-    wrap.appendChild(buildContinueAnchor());
-    return wrap;
+  setHidden(ackBtn, true);
+  setHidden(showAnywayBtn, true);
+  setHidden(confirmBox, true);
+  setHidden(continueLink, true);
+
+  if (!hasValidHttpUrl || !state.url) {
+    setHidden(wrap, true);
+    if (continueLink) continueLink.href = './index.html#check';
+    return;
   }
 
-  if (level === 'MEDIUM') {
-    if (!state.mediumAccepted) {
-      const ackBtn = el('button', 'learn-btn-secondary go-friction-btn', t('go.ackMediumBtn'));
-      ackBtn.type = 'button';
-      ackBtn.addEventListener('click', () => {
-        state.mediumAccepted = true;
-        render();
-      });
-      wrap.appendChild(ackBtn);
+  setHidden(wrap, false);
+  if (continueLink) continueLink.href = state.url;
+
+  if (state.status === 'ready' && level === 'LOW') {
+    setHidden(continueLink, false);
+    return;
+  }
+
+  if (state.status === 'ready' && (level === 'HIGH' || level === 'CRITICAL')) {
+    if (state.highStep === 0) {
+      setHidden(showAnywayBtn, false);
+    } else if (state.highStep === 1) {
+      setHidden(confirmBox, false);
     } else {
-      wrap.appendChild(buildContinueAnchor());
+      setHidden(continueLink, false);
     }
-    return wrap;
+    return;
   }
 
-  // HIGH or CRITICAL: hidden behind two deliberate taps
-  if (state.highStep === 0) {
-    const revealBtn = el('button', 'learn-btn-link go-friction-btn', t('go.showAnywayBtn'));
-    revealBtn.type = 'button';
-    revealBtn.addEventListener('click', () => {
-      state.highStep = 1;
-      render();
-    });
-    wrap.appendChild(revealBtn);
-  } else if (state.highStep === 1) {
-    const confirmBox = el('div', 'go-confirm-box');
-    confirmBox.appendChild(el('p', 'go-confirm-text', t('go.highConfirmPrompt')));
-    const confirmBtn = el('button', 'learn-btn-secondary go-friction-btn', t('go.highConfirmBtn'));
-    confirmBtn.type = 'button';
-    confirmBtn.addEventListener('click', () => {
-      state.highStep = 2;
-      render();
-    });
-    confirmBox.appendChild(confirmBtn);
-    wrap.appendChild(confirmBox);
+  // MEDIUM, analyzing fallback, or analysis_failed: require "I understand the risks" confirm first
+  if (!state.mediumAccepted) {
+    setHidden(ackBtn, false);
   } else {
-    wrap.appendChild(buildContinueAnchor());
+    setHidden(continueLink, false);
   }
-
-  return wrap;
 }
 
 function render() {
-  if (!root) return;
-  root.replaceChildren();
+  renderTopBarState();
 
-  root.appendChild(renderTopControls());
+  const emptyNote = $('go-empty-note');
+  const blockedBox = $('go-blocked-box');
+  const analyzingMsg = $('go-analyzing-msg');
+  const verdictBox = $('go-verdict-box');
+  const levelBadge = $('go-level-badge');
+  const scorePill = $('go-score-pill');
+  const summaryEl = $('go-verdict-summary');
+  const reasonsList = $('go-reasons-list');
 
-  const card = el('div', 'learn-card-shell pay-demo-card go-gate-card');
-  card.appendChild(el('span', 'verify-honesty-badge', t('go.tag')));
-  card.appendChild(el('h1', 'pay-demo-title', t('go.title')));
-  card.appendChild(el('p', 'pay-demo-sub', t('go.subtitle')));
+  const backBtn = $('go-back-btn');
+  const checkWholeLink = $('go-check-whole-link');
+  const practiseLink = $('go-practise-link');
+  const reportLink = $('go-report-link');
 
-  if (state.status === 'empty') {
-    card.appendChild(el('p', 'go-status-note', t('go.emptyNote')));
-    card.appendChild(renderDemoLinkBar());
-    const actions = el('div', 'go-actions-row');
-    const backLink = el('a', 'learn-btn-primary go-btn-link', t('go.goCheckBtn'));
-    backLink.href = './index.html#check';
-    actions.appendChild(backLink);
-    card.appendChild(actions);
-    root.appendChild(card);
-    return;
+  setHidden(emptyNote, state.status !== 'empty');
+  setHidden(blockedBox, state.status !== 'blocked');
+  setHidden(analyzingMsg, state.status !== 'analyzing');
+
+  renderDestinationBox();
+
+  const hasValidUrl = Boolean(
+    state.url &&
+    (state.status === 'analyzing' || state.status === 'ready' || state.status === 'analysis_failed')
+  );
+
+  // Action choices: Go back is always visible; helper links show whenever a valid URL exists
+  const isMediumOrAbove =
+    state.status === 'blocked' ||
+    state.status === 'analysis_failed' ||
+    (state.status === 'ready' && String(state.analysis?.level || '').toUpperCase() !== 'LOW');
+
+  if (backBtn) {
+    backBtn.className = isMediumOrAbove || state.status === 'empty' ? 'learn-btn-primary' : 'learn-btn-secondary';
+    setHidden(backBtn, false);
   }
 
-  if (state.status === 'blocked') {
-    const box = el('div', 'pay-demo-verdict verdict-tampered go-verdict-box');
-    box.appendChild(el('div', 'go-level-badge level-critical', t('go.blockedBadge')));
-    box.appendChild(el('h2', 'go-blocked-title', t('go.blockedTitle')));
-    box.appendChild(el('p', 'pay-demo-reason', t('go.blockedBody')));
-    card.appendChild(box);
-    card.appendChild(renderDemoLinkBar());
-
-    const actions = el('div', 'go-actions-row');
-    const backBtn = el('button', 'learn-btn-primary', t('go.goBackBtn'));
-    backBtn.type = 'button';
-    backBtn.addEventListener('click', goBackAction);
-    actions.appendChild(backBtn);
-    card.appendChild(actions);
-    root.appendChild(card);
-    return;
+  if (checkWholeLink) {
+    checkWholeLink.href = hasValidUrl
+      ? `./index.html#check-u=${encodeBase64UrlUtf8(state.url)}`
+      : './index.html#check';
+    setHidden(checkWholeLink, !hasValidUrl);
   }
 
-  // Destination box (always plain textContent, host highlighted in <strong>)
-  if (state.parsed) {
-    const destWrap = el('div', 'go-dest-box');
-    destWrap.appendChild(el('span', 'go-dest-label', t('go.destinationLabel')));
-    const destText = el('div', 'go-dest-url');
-    const parts = splitUrlHostParts(state.parsed);
-    destText.appendChild(document.createTextNode(parts.beforeHost));
-    destText.appendChild(el('strong', 'go-dest-host', parts.host));
-    destText.appendChild(document.createTextNode(parts.afterHost));
-    destWrap.appendChild(destText);
-    card.appendChild(destWrap);
+  if (practiseLink) {
+    const scenarioId = mapUrlResultToScenario(state.analysis);
+    practiseLink.href = `./index.html?mode=challenge&scam=${encodeURIComponent(scenarioId)}&lang=${encodeURIComponent(getLang())}#learn`;
+    setHidden(practiseLink, !hasValidUrl);
   }
 
-  if (state.status === 'analyzing' || !state.analysis) {
-    card.appendChild(el('p', 'pay-demo-status-msg', t('go.analyzing')));
-    root.appendChild(card);
-    return;
-  }
+  setHidden(reportLink, !hasValidUrl && state.status !== 'blocked');
 
-  const res = state.analysis;
-  const level = String(res.level || 'LOW').toUpperCase();
-  const isLow = level === 'LOW';
-  const verdictCls = isLow
-    ? 'verdict-valid'
-    : level === 'MEDIUM'
-      ? 'verdict-expired'
-      : 'verdict-tampered';
-
-  const verdict = el('div', `pay-demo-verdict ${verdictCls} go-verdict-box`);
-  const levelRow = el('div', 'go-level-row');
-  levelRow.appendChild(el('span', `go-level-badge level-${level.toLowerCase()}`, t(`go.levels.${level}`)));
-  levelRow.appendChild(el('span', 'go-score-pill', t('go.scoreText', { score: res.score ?? 0 })));
-  verdict.appendChild(levelRow);
-
-  const summaryText = isLow ? t('go.lowSummary') : t(`go.riskSummary.${level}`);
-  verdict.appendChild(el('p', 'go-verdict-summary', summaryText));
-
-  const reasons = [];
-  const seen = new Set();
-  for (const sig of Array.isArray(res.signals) ? res.signals : []) {
-    const txt = translateSignalReason(sig);
-    if (!seen.has(txt)) {
-      seen.add(txt);
-      reasons.push(txt);
+  // Verdict card for ready or analysis_failed
+  if (state.status === 'analysis_failed') {
+    if (verdictBox) verdictBox.className = 'pay-demo-verdict verdict-expired go-verdict-box';
+    if (levelBadge) {
+      levelBadge.className = 'go-level-badge level-medium';
+      levelBadge.textContent = tOr('go.analysisFailedBadge', 'UNCHECKED');
     }
-  }
-  if (res.ml && typeof res.ml.urlProbability === 'number' && res.ml.urlProbability >= 0.5) {
-    reasons.push(t('go.mlFlag', { pct: Math.round(res.ml.urlProbability * 100) }));
-  }
-
-  if (reasons.length > 0) {
-    const ul = el('ul', 'go-reasons-list');
-    for (const r of reasons) {
-      ul.appendChild(el('li', 'go-reason-item', r));
+    if (scorePill) scorePill.textContent = '';
+    if (summaryEl) summaryEl.textContent = tOr('go.analysisFailedMsg', 'We could not check this link');
+    if (reasonsList) {
+      reasonsList.replaceChildren();
+      setHidden(reasonsList, true);
     }
-    verdict.appendChild(ul);
+    setHidden(verdictBox, false);
+    renderContinueControls(true, 'MEDIUM');
+    return;
   }
-  card.appendChild(verdict);
 
-  // Action buttons
-  const actions = el('div', 'go-actions-row');
+  if (state.status === 'ready' && state.analysis) {
+    const res = state.analysis;
+    const level = String(res.level || 'LOW').toUpperCase();
+    const isLow = level === 'LOW';
+    const verdictCls = isLow
+      ? 'verdict-valid'
+      : level === 'MEDIUM'
+        ? 'verdict-expired'
+        : 'verdict-tampered';
 
-  const backBtn = el('button', isLow ? 'learn-btn-secondary' : 'learn-btn-primary', t('go.goBackBtn'));
-  backBtn.type = 'button';
-  backBtn.addEventListener('click', goBackAction);
-  actions.appendChild(backBtn);
+    if (verdictBox) verdictBox.className = `pay-demo-verdict ${verdictCls} go-verdict-box`;
+    if (levelBadge) {
+      levelBadge.className = `go-level-badge level-${level.toLowerCase()}`;
+      levelBadge.textContent = tOr(`go.levels.${level}`, `${level} RISK`);
+    }
+    if (scorePill) {
+      scorePill.textContent = tOr('go.scoreText', `Risk score: ${res.score ?? 0}/100`, { score: res.score ?? 0 });
+    }
+    if (summaryEl) {
+      summaryEl.textContent = isLow
+        ? tOr('go.lowSummary', 'No strong red flags found. Still be careful.')
+        : tOr(`go.riskSummary.${level}`, res.summary || '');
+    }
 
-  const checkMsgLink = el('a', 'learn-btn-secondary go-btn-link', t('go.checkWholeBtn'));
-  checkMsgLink.href = `./index.html#check-u=${encodeBase64UrlUtf8(state.url)}`;
-  actions.appendChild(checkMsgLink);
+    if (reasonsList) {
+      reasonsList.replaceChildren();
+      const seen = new Set();
+      for (const sig of Array.isArray(res.signals) ? res.signals : []) {
+        const txt = translateSignalReason(sig);
+        if (!seen.has(txt)) {
+          seen.add(txt);
+          const li = document.createElement('li');
+          li.className = 'go-reason-item';
+          li.textContent = txt;
+          reasonsList.appendChild(li);
+        }
+      }
+      if (res.ml && typeof res.ml.urlProbability === 'number' && res.ml.urlProbability >= 0.5) {
+        const pct = Math.round(res.ml.urlProbability * 100);
+        const li = document.createElement('li');
+        li.className = 'go-reason-item';
+        li.textContent = tOr('go.mlFlag', `On-device URL model flagged ${pct}% similarity to scam links.`, { pct });
+        reasonsList.appendChild(li);
+      }
+      setHidden(reasonsList, reasonsList.childElementCount === 0);
+    }
 
-  const scenarioId = mapUrlResultToScenario(res);
-  const practiseLink = el('a', 'learn-btn-secondary go-btn-link', t('go.practiseBtn'));
-  practiseLink.href = `./index.html?mode=challenge&scam=${encodeURIComponent(scenarioId)}&lang=${encodeURIComponent(getLang())}#learn`;
-  actions.appendChild(practiseLink);
+    setHidden(verdictBox, false);
+    renderContinueControls(true, level);
+    return;
+  }
 
-  const reportLink = el('a', 'learn-btn-secondary go-btn-link', t('go.reportBtn'));
-  reportLink.href = './index.html#report';
-  actions.appendChild(reportLink);
-
-  card.appendChild(actions);
-  card.appendChild(renderContinueControl(level));
-  card.appendChild(renderDemoLinkBar());
-
-  card.appendChild(el('p', 'go-disclaimer', t('go.disclaimer')));
-  root.appendChild(card);
+  setHidden(verdictBox, true);
+  renderContinueControls(hasValidUrl, 'MEDIUM');
 }
 
+bindStaticListeners();
 window.addEventListener('hashchange', inspectCurrentHash);
 
 (async () => {
   applyModeClass();
-  await initI18n();
+  render();
+  try {
+    await initI18n();
+  } catch {
+    // Keep built-in fallback copy rendered if dictionary fetch fails
+  }
   onLangChange(() => render());
   await inspectCurrentHash();
 })();

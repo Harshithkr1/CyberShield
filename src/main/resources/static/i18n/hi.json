@@ -407,6 +407,8 @@
     "blockedBadge": "अवरुद्ध",
     "blockedTitle": "यह लिंक खोला नहीं जा सकता",
     "blockedBody": "यहाँ केवल 2000 अक्षरों तक के सामान्य http:// या https:// लिंक ही मान्य हैं। असुरक्षित लिंक (javascript:, data:, file:, intent:) अपने आप रोक दिए जाते हैं।",
+    "analysisFailedBadge": "जांच नहीं हो सकी",
+    "analysisFailedMsg": "हम इस लिंक की जांच नहीं कर सके",
     "levels": {
       "LOW": "कम जोखिम",
       "MEDIUM": "मध्यम जोखिम",

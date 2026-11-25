@@ -12,9 +12,80 @@
 </head>
 <body class="pay-demo-page go-gate-page">
   <main class="container pay-demo-container">
-    <div id="go-root" class="pay-demo-root go-gate-root" aria-live="polite"></div>
+    <div id="go-root" class="pay-demo-root go-gate-root" aria-live="polite">
+      <div class="go-topbar">
+        <div class="go-mode-group" role="group" aria-label="Mode">
+          <button id="go-mode-simple" type="button" class="learn-toggle-pill" data-i18n="mode.simple">Simple mode</button>
+          <button id="go-mode-challenge" type="button" class="learn-toggle-pill is-active" data-i18n="mode.challenge">Challenge mode</button>
+        </div>
+        <div class="pay-demo-langbar" role="group" aria-label="Language">
+          <button id="go-lang-en" type="button" class="learn-toggle-pill is-active" data-i18n="lang.en">English</button>
+          <button id="go-lang-kn" type="button" class="learn-toggle-pill" data-i18n="lang.kn">ಕನ್ನಡ</button>
+          <button id="go-lang-hi" type="button" class="learn-toggle-pill" data-i18n="lang.hi">हिन्दी</button>
+        </div>
+      </div>
+
+      <section class="learn-card-shell pay-demo-card go-gate-card" aria-labelledby="go-title">
+        <span id="go-tag" class="verify-honesty-badge" data-i18n="go.tag">Link Gate · Verification Assistant</span>
+        <h1 id="go-title" class="pay-demo-title" data-i18n="go.title">Check before you go</h1>
+        <p id="go-subtitle" class="pay-demo-sub" data-i18n="go.subtitle">Inspect a link offline in your browser before deciding whether to open it.</p>
+
+        <p id="go-empty-note" class="go-status-note hidden" data-i18n="go.emptyNote">
+          No destination link found in the URL fragment (#u=...). Paste a link in Check to create a protected link, or test the demo link below.
+        </p>
+
+        <div id="go-blocked-box" class="pay-demo-verdict verdict-tampered go-verdict-box hidden" role="alert">
+          <div id="go-blocked-badge" class="go-level-badge level-critical" data-i18n="go.blockedBadge">BLOCKED</div>
+          <h2 id="go-blocked-title" class="go-blocked-title" data-i18n="go.blockedTitle">This link can't be opened</h2>
+          <p id="go-blocked-body" class="pay-demo-reason" data-i18n="go.blockedBody">
+            Only standard http:// or https:// links up to 2000 characters are allowed here. Malformed or non-web links (such as javascript:, data:, file:, or intent:) are stopped automatically.
+          </p>
+        </div>
+
+        <div id="go-dest-box" class="go-dest-box hidden">
+          <span id="go-dest-label" class="go-dest-label" data-i18n="go.destinationLabel">Destination website (domain in bold):</span>
+          <div id="go-dest-url" class="go-dest-url"><span id="go-dest-before"></span><strong id="go-dest-host" class="go-dest-host"></strong><span id="go-dest-after"></span></div>
+        </div>
+
+        <p id="go-analyzing-msg" class="pay-demo-status-msg hidden" data-i18n="go.analyzing">Analysing link offline…</p>
+
+        <div id="go-verdict-box" class="pay-demo-verdict go-verdict-box hidden">
+          <div class="go-level-row">
+            <span id="go-level-badge" class="go-level-badge"></span>
+            <span id="go-score-pill" class="go-score-pill"></span>
+          </div>
+          <p id="go-verdict-summary" class="go-verdict-summary"></p>
+          <ul id="go-reasons-list" class="go-reasons-list hidden"></ul>
+        </div>
+
+        <div id="go-actions-row" class="go-actions-row">
+          <button id="go-back-btn" type="button" class="learn-btn-primary" data-i18n="go.goBackBtn">Go back</button>
+          <a id="go-check-whole-link" href="./index.html#check" class="learn-btn-secondary go-btn-link hidden" data-i18n="go.checkWholeBtn">Check the whole message</a>
+          <a id="go-practise-link" href="./index.html?mode=challenge&amp;scam=kyc-sms#learn" class="learn-btn-secondary go-btn-link hidden" data-i18n="go.practiseBtn">Practise this scam</a>
+          <a id="go-report-link" href="./index.html#report" class="learn-btn-secondary go-btn-link hidden" data-i18n="go.reportBtn">Report this link</a>
+        </div>
+
+        <div id="go-continue-wrap" class="go-continue-wrap hidden">
+          <button id="go-ack-btn" type="button" class="learn-btn-secondary go-friction-btn hidden" data-i18n="go.ackMediumBtn">I understand the risks, continue</button>
+          <button id="go-show-anyway-btn" type="button" class="learn-btn-link go-friction-btn hidden" data-i18n="go.showAnywayBtn">Show me the link anyway</button>
+          <div id="go-confirm-box" class="go-confirm-box hidden">
+            <p id="go-confirm-text" class="go-confirm-text" data-i18n="go.highConfirmPrompt">Confirm only if you verified this exact domain through an official source:</p>
+            <button id="go-confirm-btn" type="button" class="learn-btn-secondary go-friction-btn" data-i18n="go.highConfirmBtn">Confirm: reveal website link</button>
+          </div>
+          <a id="go-continue-link" href="./index.html#check" rel="noopener noreferrer" class="go-continue-link learn-btn-secondary hidden" data-i18n="go.continueBtn">Continue to website</a>
+        </div>
+
+        <div id="go-demo-box" class="go-demo-box">
+          <button id="go-demo-risky-btn" type="button" class="verify-chip go-demo-btn" data-i18n="go.tryRiskyBtn">Try a risky link</button>
+          <span id="go-demo-hint" class="go-demo-hint" data-i18n="go.tryRiskyHint">Fictional demo: https://upi-kyc-in.top/update (never visited)</span>
+        </div>
+
+        <p id="go-disclaimer" class="go-disclaimer" data-i18n="go.disclaimer">
+          Heuristic link check only, never stored or sent to a server. Always verify domains before entering OTPs or PINs.
+        </p>
+      </section>
+    </div>
   </main>
   <script type="module" src="js/go.js"></script>
 </body>
 </html>
-

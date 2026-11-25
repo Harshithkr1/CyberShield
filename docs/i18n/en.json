@@ -407,6 +407,8 @@
     "blockedBadge": "BLOCKED",
     "blockedTitle": "This link can't be opened",
     "blockedBody": "Only standard http:// or https:// links up to 2000 characters are allowed here. Unsafe or malformed links (such as javascript:, data:, file:, or intent:) are stopped automatically.",
+    "analysisFailedBadge": "UNCHECKED",
+    "analysisFailedMsg": "We could not check this link",
     "levels": {
       "LOW": "LOW RISK",
       "MEDIUM": "MEDIUM RISK",
