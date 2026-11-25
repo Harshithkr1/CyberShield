@@ -8,6 +8,9 @@
 
 import { initI18n, t, onLangChange } from './i18n.js';
 import { getServerStatus, onServerStatusChange } from './health.js';
+import { parseUpiUri, analyzeUpiFields, preloadDemoRegistry, lookupDemoRegistry } from './upi-qr.js';
+import { generateOrderRef, createPayOrder, buildTamperedToken, verifyPayOrderToken } from './pay-tamper-lab.js';
+import { createReceiptBundle, verifyReceiptBundleJson, savePreparedReport, loadPreparedReport, renderPreparedReportRoot } from './receipt-evidence.js';
 
 const TRAIL_STORAGE_KEY = 'uss.trail';
 const verifyRoot = document.getElementById('verify-root');
@@ -17,21 +20,53 @@ const state = {
   merchants: [],
   merchantsLoaded: false,
   // Tab 1 (Before)
+  qrUriInput: '',
+  qrExpectedAmount: '',
+  qrError: '',
+  qrResult: null,
+  qrRegistryResult: null,
+  camActive: false,
+  camNotice: '',
+  camStream: null,
+  camRaf: null,
   upiInput: '',
   nameInput: '',
   tab1Loading: false,
   tab1Error: '',
   tab1Result: null,
-  // Tab 2 (During)
+  // Tab 2 (During – Tamper Lab & Signed QR)
   selectedMerchantId: 'ravi-stores',
   amountInput: '500',
   tab2Loading: false,
   tab2Error: '',
-  qrData: null, // { paymentLink, qrDataUri, payload, signature, merchant, amountPaise, amountRupees, orderId, expiresAtEpochSec }
+  qrData: null,
   tamperAmountInput: '5000',
   tamperCheckLoading: false,
-  tamperCheckResult: null, // { checkResult, originalRupees, receivedRupees }
+  tamperCheckResult: null,
+  labVpa: 'demo-shop@csbank',
+  labPayee: 'Cyber Shield Demo Store',
+  labAmount: '500',
+  labNote: 'Order payment',
+  labRef: generateOrderRef(),
+  labLoading: false,
+  labError: '',
+  labOrder: null,
+  labTamperMode: 'clean',
+  labVerifyResult: null,
+  labClockHandle: null,
   // Tab 3 (After)
+  evStatus: 'completed',
+  evRrn: '',
+  evVpa: '',
+  evName: '',
+  evAmount: '',
+  evTimestamp: new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16),
+  evApp: '',
+  evNotes: '',
+  evError: '',
+  evBundle: null,
+  evVerifyJsonText: '',
+  evVerifyResult: null,
   trail: readStoredTrail(),
   tamperedIndex: null,
   tab3Loading: false,
@@ -154,7 +189,417 @@ async function runReceiverVerify(upiOverride, nameOverride) {
   }
 }
 
+function buildHonestyCard(badgeKey, titleKey, bodyKey) {
+  const card = el('div', 'verify-honesty-card');
+  card.setAttribute('role', 'note');
+  card.appendChild(el('span', 'verify-honesty-badge', t(`verify.honesty.${badgeKey}`)));
+  card.appendChild(el('h3', 'verify-honesty-title', t(`verify.honesty.${titleKey}`)));
+  card.appendChild(el('p', 'verify-honesty-body', t(`verify.honesty.${bodyKey}`)));
+  return card;
+}
+
+function stopCameraScan(shouldRender = false) {
+  if (state.camRaf) {
+    cancelAnimationFrame(state.camRaf);
+    state.camRaf = null;
+  }
+  if (state.camStream) {
+    state.camStream.getTracks().forEach((tr) => { try { tr.stop(); } catch {} });
+    state.camStream = null;
+  }
+  state.camActive = false;
+  if (shouldRender) render();
+}
+
+function inspectUpiText(rawText) {
+  const input = (rawText !== undefined ? String(rawText) : state.qrUriInput).trim();
+  state.qrUriInput = input;
+  const parsed = parseUpiUri(input);
+  if (!parsed) {
+    state.qrError = t('verify.qr.invalidUri');
+    state.qrResult = null;
+    state.qrRegistryResult = null;
+    render();
+    return;
+  }
+  state.qrError = '';
+  state.qrResult = analyzeUpiFields(parsed, state.qrExpectedAmount);
+  state.qrRegistryResult = lookupDemoRegistry(parsed);
+  render();
+}
+
+function decodeCanvasPixels(source, width, height) {
+  if (typeof window.jsQR !== 'function') {
+    state.qrError = t('verify.qr.noQrFound');
+    render();
+    return false;
+  }
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+  ctx.drawImage(source, 0, 0, width, height);
+  const imgData = ctx.getImageData(0, 0, width, height);
+  const decoded = window.jsQR(imgData.data, width, height, { inversionAttempts: 'attemptBoth' });
+  if (decoded && decoded.data) {
+    stopCameraScan(false);
+    inspectUpiText(decoded.data);
+    return true;
+  }
+  return false;
+}
+
+function decodeQrImageFile(file) {
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    const img = new Image();
+    img.onload = () => {
+      const ok = decodeCanvasPixels(img, img.naturalWidth || img.width, img.naturalHeight || img.height);
+      if (!ok) {
+        state.qrError = t('verify.qr.noQrFound');
+        state.qrResult = null;
+        render();
+      }
+    };
+    img.onerror = () => {
+      state.qrError = t('verify.qr.noQrFound');
+      state.qrResult = null;
+      render();
+    };
+    img.src = String(reader.result || '');
+  };
+  reader.readAsDataURL(file);
+}
+
+async function decodeSampleQrImg(imgEl) {
+  if (!imgEl) return;
+  try {
+    if (!imgEl.complete && typeof imgEl.decode === 'function') {
+      await imgEl.decode();
+    }
+    const w = imgEl.naturalWidth || imgEl.width;
+    const h = imgEl.naturalHeight || imgEl.height;
+    if (!w || !h || !decodeCanvasPixels(imgEl, w, h)) {
+      state.qrError = t('verify.qr.noQrFound');
+      state.qrResult = null;
+      render();
+    }
+  } catch {
+    state.qrError = t('verify.qr.noQrFound');
+    state.qrResult = null;
+    render();
+  }
+}
+
+async function startCameraScan() {
+  if (!navigator.mediaDevices || typeof navigator.mediaDevices.getUserMedia !== 'function') {
+    state.camNotice = t('verify.qr.camUnavailable');
+    state.camActive = false;
+    render();
+    return;
+  }
+  state.camNotice = '';
+  state.qrError = '';
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'environment' },
+      audio: false
+    });
+    state.camStream = stream;
+    state.camActive = true;
+    render();
+
+    const videoEl = document.getElementById('verify-qr-video');
+    if (!videoEl) return;
+    videoEl.srcObject = stream;
+    await videoEl.play().catch(() => {});
+
+    const scanFrame = () => {
+      if (!state.camActive || !state.camStream) return;
+      if (videoEl.readyState >= 2 && videoEl.videoWidth > 0 && videoEl.videoHeight > 0) {
+        if (decodeCanvasPixels(videoEl, videoEl.videoWidth, videoEl.videoHeight)) {
+          return;
+        }
+      }
+      state.camRaf = requestAnimationFrame(scanFrame);
+    };
+    state.camRaf = requestAnimationFrame(scanFrame);
+  } catch {
+    stopCameraScan(false);
+    state.camNotice = t('verify.qr.camUnavailable');
+    render();
+  }
+}
+
+function renderQrInspector(panel) {
+  const box = el('div', 'verify-qr-inspector');
+  box.appendChild(el('h3', 'verify-qr-inspector-title', t('verify.qr.heading')));
+  box.appendChild(el('p', 'verify-tab-explainer', t('verify.qr.sub')));
+
+  // Paste image / UPI text handler inside Tab 1 inspector
+  box.addEventListener('paste', (e) => {
+    const items = e.clipboardData?.items;
+    if (items) {
+      for (const item of items) {
+        if (item.type && item.type.startsWith('image/')) {
+          const blob = item.getAsFile();
+          if (blob) {
+            e.preventDefault();
+            decodeQrImageFile(blob);
+            return;
+          }
+        }
+      }
+    }
+    const pastedText = e.clipboardData?.getData('text') || '';
+    if (/upi:\/\/pay/i.test(pastedText)) {
+      e.preventDefault();
+      inspectUpiText(pastedText);
+    }
+  });
+
+  // 1. "Try a sample" buttons backed by static PNG files generated with qrcode
+  const samplesRow = el('div', 'verify-qr-samples');
+  samplesRow.appendChild(el('span', 'verify-samples-lbl', t('verify.qr.samplesLabel')));
+  const sampleDefs = [
+    { key: 'sampleClean', src: 'samples/qr/clean-shop.png' },
+    { key: 'sampleBait', src: 'samples/qr/bait-word.png' },
+    { key: 'sampleBlank', src: 'samples/qr/amount-blank.png' }
+  ];
+  for (const s of sampleDefs) {
+    const btn = el('button', 'verify-chip verify-qr-sample-btn');
+    btn.type = 'button';
+    const thumb = document.createElement('img');
+    thumb.src = s.src;
+    thumb.alt = '';
+    thumb.className = 'verify-qr-sample-thumb';
+    btn.appendChild(thumb);
+    btn.appendChild(document.createTextNode(t(`verify.qr.${s.key}`)));
+    btn.addEventListener('click', () => decodeSampleQrImg(thumb));
+    samplesRow.appendChild(btn);
+  }
+  box.appendChild(samplesRow);
+
+  // 1b. Demo Bank (fictional) quick-fill cases: match, mismatch, unknown
+  const demoRow = el('div', 'verify-samples-row');
+  demoRow.appendChild(el('span', 'verify-samples-lbl', t('verify.qr.demoLookupLabel')));
+  const demoCases = [
+    { key: 'demoMatchChip', uri: 'upi://pay?pa=demo-shop@csbank&pn=Cyber%20Shield%20Demo%20Store&am=499.00&cu=INR&tr=CS101&tn=Shop%20order' },
+    { key: 'demoMismatchChip', uri: 'upi://pay?pa=qwe978xyz@ybl&pn=Zomato%20Outlet&am=320.00&cu=INR&tr=ZM902&tn=Order%20bill' },
+    { key: 'demoUnknownChip', uri: 'upi://pay?pa=unknownshop@okicici&pn=Local%20Vendor&am=150.00&cu=INR&tr=LV12' }
+  ];
+  for (const dc of demoCases) {
+    const chip = el('button', 'verify-chip', t(`verify.qr.${dc.key}`));
+    chip.type = 'button';
+    chip.addEventListener('click', () => inspectUpiText(dc.uri));
+    demoRow.appendChild(chip);
+  }
+  box.appendChild(demoRow);
+
+  // 2. Camera scan + image upload controls
+  const actionsRow = el('div', 'verify-qr-controls');
+  const camBtn = el('button', 'learn-btn-secondary', t(state.camActive ? 'verify.qr.camStop' : 'verify.qr.camStart'));
+  camBtn.type = 'button';
+  camBtn.addEventListener('click', () => {
+    if (state.camActive) stopCameraScan(true);
+    else startCameraScan();
+  });
+  actionsRow.appendChild(camBtn);
+
+  const fileLabel = el('label', 'verify-chip verify-file-label', t('verify.qr.uploadLabel'));
+  const fileInput = document.createElement('input');
+  fileInput.type = 'file';
+  fileInput.accept = 'image/*';
+  fileInput.className = 'verify-file-input';
+  fileInput.addEventListener('change', (e) => {
+    const f = e.target.files && e.target.files[0];
+    if (f) decodeQrImageFile(f);
+  });
+  fileLabel.appendChild(fileInput);
+  actionsRow.appendChild(fileLabel);
+  box.appendChild(actionsRow);
+
+  box.appendChild(el('p', 'verify-paste-hint', t('verify.qr.pasteZoneHint')));
+
+  if (state.camNotice) {
+    box.appendChild(el('div', 'verify-inline-note verify-cam-fallback', state.camNotice));
+  }
+
+  if (state.camActive) {
+    const camBox = el('div', 'verify-cam-preview');
+    const video = document.createElement('video');
+    video.id = 'verify-qr-video';
+    video.setAttribute('playsinline', '');
+    video.muted = true;
+    video.className = 'verify-qr-video';
+    camBox.appendChild(video);
+    box.appendChild(camBox);
+  }
+
+  // 3. Pasted UPI link text + Optional expected amount form
+  const form = el('form', 'verify-form');
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    inspectUpiText();
+  });
+
+  const grid = el('div', 'verify-input-grid');
+
+  const uriField = el('div', 'verify-field');
+  const uriLbl = el('label', 'verify-label', t('verify.qr.uriLabel'));
+  uriLbl.setAttribute('for', 'verify-qr-uri-input');
+  const uriInp = el('input', 'verify-input');
+  uriInp.id = 'verify-qr-uri-input';
+  uriInp.type = 'text';
+  uriInp.placeholder = t('verify.qr.uriPlaceholder');
+  uriInp.value = state.qrUriInput;
+  uriInp.maxLength = 600;
+  uriInp.addEventListener('input', (e) => { state.qrUriInput = e.target.value; });
+  uriField.appendChild(uriLbl);
+  uriField.appendChild(uriInp);
+
+  const expField = el('div', 'verify-field');
+  const expLbl = el('label', 'verify-label', t('verify.qr.expectedLabel'));
+  expLbl.setAttribute('for', 'verify-qr-expected-input');
+  const expInp = el('input', 'verify-input');
+  expInp.id = 'verify-qr-expected-input';
+  expInp.type = 'number';
+  expInp.step = '0.01';
+  expInp.min = '0.01';
+  expInp.placeholder = t('verify.qr.expectedPlaceholder');
+  expInp.value = state.qrExpectedAmount;
+  expInp.addEventListener('input', (e) => {
+    state.qrExpectedAmount = e.target.value;
+    if (state.qrResult && state.qrResult.parsed) {
+      state.qrResult = analyzeUpiFields(state.qrResult.parsed, state.qrExpectedAmount);
+    }
+  });
+  expInp.addEventListener('change', () => {
+    if (state.qrResult && state.qrResult.parsed) render();
+  });
+  expField.appendChild(expLbl);
+  expField.appendChild(expInp);
+
+  grid.appendChild(uriField);
+  grid.appendChild(expField);
+  form.appendChild(grid);
+
+  const inspectBtn = el('button', 'learn-btn-primary', t('verify.qr.inspectBtn'));
+  inspectBtn.type = 'submit';
+  form.appendChild(inspectBtn);
+  box.appendChild(form);
+
+  if (state.qrError) {
+    box.appendChild(el('div', 'verify-error-box', state.qrError));
+  }
+
+  // 4. Decoded fields + flags + "What to do now"
+  if (state.qrResult) {
+    const { parsed, flags, cleanMessage, guidance } = state.qrResult;
+    const out = el('div', 'verify-qr-output');
+
+    out.appendChild(el('h4', 'verify-qr-subhead', t('verify.qr.fieldsTitle')));
+    const fieldsGrid = el('div', 'verify-qr-fields-grid');
+    const fieldSpecs = [
+      ['fieldPa', parsed.pa],
+      ['fieldPn', parsed.pn],
+      ['fieldAm', parsed.am ? `${parsed.cu || 'INR'} ${parsed.am}` : ''],
+      ['fieldTn', parsed.tn],
+      ['fieldTr', parsed.tr],
+      ['fieldCu', parsed.cu]
+    ];
+    for (const [lblKey, val] of fieldSpecs) {
+      const fCard = el('div', `verify-qr-field-card${!val ? ' is-blank' : ''}`);
+      fCard.appendChild(el('span', 'verify-qr-field-lbl', t(`verify.qr.${lblKey}`)));
+      fCard.appendChild(el('strong', 'verify-qr-field-val', val || t('verify.qr.missingValue')));
+      fieldsGrid.appendChild(fCard);
+    }
+    out.appendChild(fieldsGrid);
+
+    out.appendChild(el('h4', 'verify-qr-subhead', t('verify.qr.flagsTitle')));
+    if (flags.length === 0) {
+      const cleanCard = el('div', 'verify-verdict-card status-verified');
+      cleanCard.appendChild(el('p', 'verify-verdict-reason', cleanMessage));
+      out.appendChild(cleanCard);
+    } else {
+      const flagsList = el('ul', 'verify-qr-flags-list');
+      for (const fl of flags) {
+        const li = el('li', 'verify-qr-flag-item');
+        li.appendChild(el('strong', 'verify-qr-flag-title', fl.title));
+        li.appendChild(el('p', 'verify-qr-flag-why', fl.why));
+        flagsList.appendChild(li);
+      }
+      out.appendChild(flagsList);
+    }
+
+    const todoBox = el('div', 'verify-qr-todo');
+    todoBox.appendChild(el('h4', 'verify-qr-subhead', t('verify.qr.whatToDoTitle')));
+    const ul = el('ul', 'verify-qr-todo-list');
+    for (const step of guidance) {
+      ul.appendChild(el('li', '', step));
+    }
+    todoBox.appendChild(ul);
+    out.appendChild(todoBox);
+
+    // 5. Auto Demo Bank (fictional) VPA registry lookup + honest CAN/CANNOT card
+    const reg = state.qrRegistryResult || lookupDemoRegistry(parsed);
+    const statusCls = reg.status === 'MATCH'
+      ? 'status-verified'
+      : reg.status === 'MISMATCH'
+        ? 'status-tampered'
+        : 'status-lookalike';
+    const regCard = el('div', `verify-verdict-card verify-registry-card ${statusCls}`);
+    const regHeader = el('p', 'verify-registry-head');
+    regHeader.appendChild(document.createTextNode(`${t('verify.qr.registryHeading')} `));
+    regHeader.appendChild(el('strong', '', reg.registeredName || t('verify.qr.registryNotListed')));
+    regCard.appendChild(regHeader);
+
+    if (reg.missingPn) {
+      regCard.appendChild(el('p', 'verify-registry-missing-pn', t('verify.qr.registryMissingPn')));
+    }
+
+    if (reg.status === 'MATCH') {
+      regCard.appendChild(el('strong', 'verify-verdict-badge', t('verify.qr.registryMatchTitle')));
+      regCard.appendChild(el('p', 'verify-verdict-reason', t('verify.qr.registryMatchNote')));
+    } else if (reg.status === 'MISMATCH') {
+      regCard.appendChild(el('strong', 'verify-verdict-badge', t('verify.qr.registryMismatchBadge')));
+      const mismatchLine = el('p', 'verify-verdict-reason verify-mismatch-line');
+      mismatchLine.appendChild(document.createTextNode('QR claims '));
+      mismatchLine.appendChild(el('mark', 'verify-name-highlight', reg.qrPn));
+      mismatchLine.appendChild(document.createTextNode(' but Demo Bank registers '));
+      mismatchLine.appendChild(el('mark', 'verify-name-highlight', reg.registeredName));
+      mismatchLine.appendChild(document.createTextNode(' — do not pay.'));
+      regCard.appendChild(mismatchLine);
+    } else {
+      regCard.appendChild(el('p', 'verify-verdict-reason', t('verify.qr.registryUnknownNote')));
+    }
+    out.appendChild(regCard);
+
+    const honestCard = el('div', 'verify-qr-honest-limits');
+    honestCard.appendChild(el('span', 'verify-honesty-badge', t('verify.qr.honestBankTag')));
+    const hGrid = el('div', 'verify-limits-grid');
+    const c1 = el('div', 'verify-limit-col can-col');
+    c1.appendChild(el('h4', 'verify-limit-head', t('verify.qr.honestCanLbl')));
+    c1.appendChild(el('p', 'verify-limit-body', t('verify.qr.honestCanText')));
+    const c2 = el('div', 'verify-limit-col cannot-col');
+    c2.appendChild(el('h4', 'verify-limit-head', t('verify.qr.honestCannotLbl')));
+    c2.appendChild(el('p', 'verify-limit-body', t('verify.qr.honestCannotText')));
+    hGrid.appendChild(c1);
+    hGrid.appendChild(c2);
+    honestCard.appendChild(hGrid);
+    out.appendChild(honestCard);
+
+    box.appendChild(out);
+  }
+
+  panel.appendChild(box);
+}
+
 function renderTab1(panel) {
+  panel.appendChild(buildHonestyCard('beforeBadge', 'beforeTitle', 'beforeBody'));
+  renderQrInspector(panel);
+  if (!state.merchantsLoaded) return;
   panel.appendChild(el('p', 'verify-tab-explainer', t('verify.tab1.explainer')));
 
   // Example chips
@@ -319,138 +764,252 @@ async function runTamperCheck() {
   }
 }
 
+function stopLabCountdown() {
+  if (state.labClockHandle) {
+    clearInterval(state.labClockHandle);
+    state.labClockHandle = null;
+  }
+}
+
+function formatCountdownText(expiresAtMs) {
+  const remMs = Math.max(0, Number(expiresAtMs || 0) - Date.now());
+  if (remMs <= 0) return t('verify.tab2.lab.expiredClock');
+  const totalSec = Math.ceil(remMs / 1000);
+  const mm = String(Math.floor(totalSec / 60)).padStart(2, '0');
+  const ss = String(totalSec % 60).padStart(2, '0');
+  return `${t('verify.tab2.lab.signedPrefix')}${mm}:${ss}`;
+}
+
+function startLabCountdown() {
+  stopLabCountdown();
+  if (!state.labOrder || !state.labOrder.expiresAt) return;
+  state.labClockHandle = setInterval(() => {
+    const elNode = document.getElementById('verify-lab-countdown');
+    if (elNode && state.labOrder) {
+      elNode.textContent = formatCountdownText(state.labOrder.expiresAt);
+    }
+  }, 1000);
+}
+
+async function submitLabOrder() {
+  state.labLoading = true;
+  state.labError = '';
+  state.labTamperMode = 'clean';
+  state.labVerifyResult = null;
+  stopLabCountdown();
+  render();
+
+  try {
+    const order = await createPayOrder({
+      receiverVpa: state.labVpa,
+      payeeName: state.labPayee,
+      amount: state.labAmount,
+      note: state.labNote,
+      ref: state.labRef
+    });
+    state.labOrder = order;
+    state.labVerifyResult = await verifyPayOrderToken(order.token, { demoMode: order.demoMode });
+    startLabCountdown();
+  } catch (err) {
+    state.labError = err.message || 'Unable to create signed order.';
+  } finally {
+    state.labLoading = false;
+    render();
+  }
+}
+
+async function applyLabTamperToggle(mode) {
+  if (!state.labOrder) return;
+  state.labTamperMode = mode;
+  state.labLoading = true;
+  state.labError = '';
+  render();
+
+  try {
+    const isExpire = mode === 'expire';
+    const token = buildTamperedToken(state.labOrder, isExpire ? 'clean' : mode);
+    state.labVerifyResult = await verifyPayOrderToken(token, {
+      demoMode: state.labOrder.demoMode,
+      forceExpired: isExpire
+    });
+  } catch (err) {
+    state.labError = err.message || 'Verification failed.';
+  } finally {
+    state.labLoading = false;
+    render();
+  }
+}
+
 function renderTab2(panel) {
-  panel.appendChild(el('p', 'verify-tab-explainer', t('verify.tab2.explainer')));
+  panel.appendChild(buildHonestyCard('whileBadge', 'whileTitle', 'whileBody'));
+
+  // Interactive Tamper Lab (works with backend OR offline Web Crypto fallback)
+  const labBox = el('div', 'verify-tamper-lab');
+  labBox.appendChild(el('h3', 'verify-qr-inspector-title', t('verify.tab2.lab.heading')));
+  labBox.appendChild(el('p', 'verify-tab-explainer', t('verify.tab2.lab.sub')));
 
   const form = el('form', 'verify-form');
   form.addEventListener('submit', (e) => {
     e.preventDefault();
-    generateSignedQr();
+    submitLabOrder();
   });
 
   const grid = el('div', 'verify-input-grid');
-
-  const merchField = el('div', 'verify-field');
-  const merchLbl = el('label', 'verify-label', t('verify.tab2.merchantLabel'));
-  merchLbl.setAttribute('for', 'verify-merchant-select');
-  const select = el('select', 'verify-input');
-  select.id = 'verify-merchant-select';
-  for (const m of state.merchants) {
-    const opt = el('option', '', `${m.name} (${m.upiId})`);
-    opt.value = m.id;
-    if (m.id === state.selectedMerchantId) opt.selected = true;
-    select.appendChild(opt);
+  const fields = [
+    { id: 'lab-vpa', key: 'vpaLabel', prop: 'labVpa', type: 'text' },
+    { id: 'lab-payee', key: 'payeeLabel', prop: 'labPayee', type: 'text' },
+    { id: 'lab-amt', key: 'amountLabel', prop: 'labAmount', type: 'number', step: '0.01', min: '0.01' },
+    { id: 'lab-note', key: 'noteLabel', prop: 'labNote', type: 'text' },
+    { id: 'lab-ref', key: 'refLabel', prop: 'labRef', type: 'text' }
+  ];
+  for (const f of fields) {
+    const wrap = el('div', 'verify-field');
+    const lbl = el('label', 'verify-label', t(`verify.tab2.lab.${f.key}`));
+    lbl.setAttribute('for', f.id);
+    const inp = el('input', 'verify-input');
+    inp.id = f.id;
+    inp.type = f.type;
+    if (f.step) inp.step = f.step;
+    if (f.min) inp.min = f.min;
+    inp.value = state[f.prop];
+    inp.addEventListener('input', (e) => { state[f.prop] = e.target.value; });
+    wrap.appendChild(lbl);
+    wrap.appendChild(inp);
+    grid.appendChild(wrap);
   }
-  select.addEventListener('change', (e) => { state.selectedMerchantId = e.target.value; });
-  merchField.appendChild(merchLbl);
-  merchField.appendChild(select);
-
-  const amtField = el('div', 'verify-field');
-  const amtLbl = el('label', 'verify-label', t('verify.tab2.amountLabel'));
-  amtLbl.setAttribute('for', 'verify-amount-input');
-  const amtInp = el('input', 'verify-input');
-  amtInp.id = 'verify-amount-input';
-  amtInp.type = 'number';
-  amtInp.step = '0.01';
-  amtInp.min = '0.01';
-  amtInp.max = '100000';
-  amtInp.value = state.amountInput;
-  amtInp.addEventListener('input', (e) => { state.amountInput = e.target.value; });
-  amtField.appendChild(amtLbl);
-  amtField.appendChild(amtInp);
-
-  grid.appendChild(merchField);
-  grid.appendChild(amtField);
   form.appendChild(grid);
 
-  const genBtn = el('button', 'learn-btn-primary', t('verify.tab2.generateBtn'));
-  genBtn.type = 'submit';
-  genBtn.disabled = state.tab2Loading || !state.merchantsLoaded;
-  form.appendChild(genBtn);
-  panel.appendChild(form);
+  const createBtn = el('button', 'learn-btn-primary', t('verify.tab2.lab.createBtn'));
+  createBtn.type = 'submit';
+  createBtn.disabled = state.labLoading;
+  form.appendChild(createBtn);
+  labBox.appendChild(form);
 
-  if (state.tab2Error) {
-    panel.appendChild(el('p', 'verify-inline-error', state.tab2Error));
+  if (state.labError) {
+    labBox.appendChild(el('div', 'verify-error-box', state.labError));
   }
 
-  if (state.qrData) {
-    const qrBox = el('div', 'verify-qr-result');
-
-    const qrVisual = el('div', 'verify-qr-visual');
-    const img = document.createElement('img');
-    img.className = 'verify-qr-img';
-    img.src = state.qrData.qrDataUri;
-    img.alt = `${state.qrData.merchant.name} QR`;
-    img.width = 220;
-    img.height = 220;
-    qrVisual.appendChild(img);
-    qrVisual.appendChild(el('span', 'verify-demo-pill', t('verify.demoNoMoney')));
-
-    const qrInfo = el('div', 'verify-qr-info');
-    qrInfo.appendChild(el('p', 'verify-seal-line', t('verify.tab2.sealLine')));
-    qrInfo.appendChild(el('span', 'verify-link-lbl', t('verify.tab2.linkLabel')));
-    qrInfo.appendChild(el('code', 'verify-link-code', state.qrData.paymentLink));
-
-    const openLink = el('a', 'learn-btn-secondary verify-open-customer', t('verify.tab2.openCustomerBtn'));
-    openLink.href = `pay-demo.html?p=${encodeURIComponent(state.qrData.payload)}&s=${encodeURIComponent(state.qrData.signature)}`;
-    openLink.target = '_blank';
-    openLink.rel = 'noopener noreferrer';
-    qrInfo.appendChild(openLink);
-
-    qrBox.appendChild(qrVisual);
-    qrBox.appendChild(qrInfo);
-    panel.appendChild(qrBox);
-
-    // Try it yourself box
-    const tryBox = el('div', 'verify-try-box');
-    tryBox.appendChild(el('h3', 'verify-try-title', t('verify.tab2.tryTitle')));
-    tryBox.appendChild(el('p', 'verify-try-hint', t('verify.tab2.tryHint')));
-
-    const tryRow = el('div', 'verify-try-row');
-    const editLbl = el('label', 'verify-label', t('verify.tab2.editAmountLabel'));
-    editLbl.setAttribute('for', 'verify-tamper-amount');
-    const editInp = el('input', 'verify-input');
-    editInp.id = 'verify-tamper-amount';
-    editInp.type = 'number';
-    editInp.step = '0.01';
-    editInp.min = '0.01';
-    editInp.max = '100000';
-    editInp.value = state.tamperAmountInput;
-    editInp.addEventListener('input', (e) => { state.tamperAmountInput = e.target.value; });
-
-    const checkBtn = el('button', 'learn-btn-primary', t('verify.tab2.checkBtn'));
-    checkBtn.type = 'button';
-    checkBtn.disabled = state.tamperCheckLoading;
-    checkBtn.addEventListener('click', runTamperCheck);
-
-    tryRow.appendChild(editLbl);
-    tryRow.appendChild(editInp);
-    tryRow.appendChild(checkBtn);
-    tryBox.appendChild(tryRow);
-
-    if (state.tamperCheckResult) {
-      const { checkResult, originalRupees, receivedRupees } = state.tamperCheckResult;
-      const st = checkResult.status;
-      const resCard = el('div', `verify-verdict-card status-${st.toLowerCase()}`);
-      const msgKey = st === 'VALID' ? 'statusValid' : st === 'TAMPERED' ? 'statusTampered' : st === 'EXPIRED' ? 'statusExpired' : 'statusMalformed';
-      resCard.appendChild(el('p', 'verify-tamper-headline', t(`verify.tab2.${msgKey}`)));
-
-      const comp = el('div', 'verify-side-by-side');
-      const colOrig = el('div', 'verify-comp-col');
-      colOrig.appendChild(el('span', 'verify-comp-lbl', t('verify.tab2.originalLabel')));
-      colOrig.appendChild(el('strong', 'verify-comp-val', originalRupees));
-      const colRecv = el('div', 'verify-comp-col');
-      colRecv.appendChild(el('span', 'verify-comp-lbl', t('verify.tab2.receivedLabel')));
-      colRecv.appendChild(el('strong', 'verify-comp-val', receivedRupees));
-      comp.appendChild(colOrig);
-      comp.appendChild(colRecv);
-      resCard.appendChild(comp);
-
-      tryBox.appendChild(resCard);
+  if (state.labOrder) {
+    const order = state.labOrder;
+    const isDemo = Boolean(order.demoMode || state.labVerifyResult?.demoMode);
+    if (isDemo) {
+      labBox.appendChild(el('div', 'verify-lab-demo-banner', t('verify.tab2.lab.demoBanner')));
     }
 
-    panel.appendChild(tryBox);
+    const countdownP = el('p', 'verify-lab-countdown', formatCountdownText(order.expiresAt));
+    countdownP.id = 'verify-lab-countdown';
+    labBox.appendChild(countdownP);
+
+    const qrLayout = el('div', 'verify-qr-result');
+    const qrVisual = el('div', 'verify-qr-visual');
+    if (order.qrPngBase64) {
+      const img = document.createElement('img');
+      img.className = 'verify-qr-img';
+      img.src = `data:image/png;base64,${order.qrPngBase64}`;
+      img.alt = 'Demo Bank signed QR';
+      img.width = 210;
+      img.height = 210;
+      qrVisual.appendChild(img);
+    } else {
+      const offlineBox = el('div', 'verify-lab-token-card');
+      offlineBox.appendChild(el('span', 'verify-demo-pill', t('verify.demoNoMoney')));
+      offlineBox.appendChild(el('code', 'verify-link-code', order.token));
+      qrVisual.appendChild(offlineBox);
+    }
+
+    const payloadBox = el('div', 'verify-qr-info');
+    payloadBox.appendChild(el('h4', 'verify-qr-subhead', t('verify.tab2.lab.payloadTitle')));
+    const pGrid = el('div', 'verify-qr-fields-grid');
+    const p = order.payload;
+    for (const [k, v] of [['pa', p.pa], ['pn', p.pn], ['am', `INR ${p.am}`], ['tr', p.tr], ['tn', p.tn], ['ts', String(p.ts)]]) {
+      const card = el('div', 'verify-qr-field-card');
+      card.appendChild(el('span', 'verify-qr-field-lbl', k));
+      card.appendChild(el('strong', 'verify-qr-field-val', v || '—'));
+      pGrid.appendChild(card);
+    }
+    payloadBox.appendChild(pGrid);
+
+    qrLayout.appendChild(qrVisual);
+    qrLayout.appendChild(payloadBox);
+    labBox.appendChild(qrLayout);
+
+    // Tamper simulation toggles
+    const toggleWrap = el('div', 'verify-lab-toggles');
+    toggleWrap.appendChild(el('p', 'verify-try-hint', t('verify.tab2.lab.togglesTitle')));
+    const btnRow = el('div', 'verify-samples-row');
+    const toggleDefs = [
+      { mode: 'clean', key: 'toggleClean' },
+      { mode: 'swap_vpa', key: 'toggleSwapVpa' },
+      { mode: 'change_amount', key: 'toggleAmount' },
+      { mode: 'alter_ts', key: 'toggleTimestamp' },
+      { mode: 'expire', key: 'toggleExpire' }
+    ];
+    for (const td of toggleDefs) {
+      const btn = el('button', `verify-chip${state.labTamperMode === td.mode ? ' is-selected' : ''}`, t(`verify.tab2.lab.${td.key}`));
+      btn.type = 'button';
+      btn.disabled = state.labLoading;
+      btn.addEventListener('click', () => applyLabTamperToggle(td.mode));
+      btnRow.appendChild(btn);
+    }
+    toggleWrap.appendChild(btnRow);
+    labBox.appendChild(toggleWrap);
+
+    // Result panel (same shape every time: VALID / INVALID / EXPIRED)
+    if (state.labVerifyResult) {
+      const vr = state.labVerifyResult;
+      const isExpired = !vr.valid && vr.reason === 'expired';
+      const cardCls = vr.valid ? 'status-verified' : isExpired ? 'status-lookalike' : 'status-tampered';
+      const resCard = el('div', `verify-verdict-card verify-lab-result ${cardCls}`);
+
+      if (vr.valid) {
+        resCard.appendChild(el('strong', 'verify-verdict-badge', t('verify.tab2.lab.validTitle')));
+        resCard.appendChild(el('p', 'verify-verdict-reason', t('verify.tab2.lab.validBody')));
+      } else if (isExpired) {
+        resCard.appendChild(el('strong', 'verify-verdict-badge', t('verify.tab2.lab.expiredTitle')));
+        resCard.appendChild(el('p', 'verify-verdict-reason', t('verify.tab2.lab.expiredBody')));
+      } else {
+        resCard.appendChild(el('strong', 'verify-verdict-badge', t('verify.tab2.lab.invalidTitle')));
+        resCard.appendChild(el('p', 'verify-verdict-reason', t('verify.tab2.lab.invalidBody')));
+
+        if (Array.isArray(vr.changedFields) && vr.changedFields.length > 0) {
+          const tableWrap = el('div', 'verify-table-wrap');
+          const table = el('table', 'verify-trail-table verify-diff-table');
+          const thead = document.createElement('thead');
+          const hr = document.createElement('tr');
+          for (const ck of ['colField', 'colOriginal', 'colReceived']) {
+            hr.appendChild(el('th', '', t(`verify.tab2.lab.${ck}`)));
+          }
+          thead.appendChild(hr);
+          table.appendChild(thead);
+
+          const tbody = document.createElement('tbody');
+          for (const ch of vr.changedFields) {
+            const tr = document.createElement('tr');
+            tr.className = 'is-broken-row';
+            tr.appendChild(el('td', '', ch.field));
+            tr.appendChild(el('td', '', ch.original));
+            tr.appendChild(el('td', '', ch.received));
+            tbody.appendChild(tr);
+          }
+          table.appendChild(tbody);
+          tableWrap.appendChild(table);
+          resCard.appendChild(tableWrap);
+        }
+      }
+      labBox.appendChild(resCard);
+    }
   }
+
+  panel.appendChild(labBox);
+
+  // Production reality honesty card below the lab
+  const prodCard = el('div', 'verify-honesty-card verify-lab-honesty');
+  prodCard.setAttribute('role', 'note');
+  prodCard.appendChild(el('span', 'verify-honesty-badge', t('verify.tab2.lab.honestyBadge')));
+  prodCard.appendChild(el('p', 'verify-honesty-body', t('verify.tab2.lab.honestyBody')));
+  panel.appendChild(prodCard);
+
+  if (!state.merchantsLoaded) return;
 }
 
 // ── Tab 3: After payment (Hash-Chained Receipt Trail) ─────────────────────
@@ -541,7 +1100,313 @@ function clearTrail() {
   render();
 }
 
+async function submitEvidenceReceipt() {
+  state.evError = '';
+  try {
+    const bundle = await createReceiptBundle({
+      status: state.evStatus,
+      rrn: state.evRrn,
+      receiverVpa: state.evVpa,
+      receiverName: state.evName,
+      amount: state.evAmount,
+      timestamp: state.evTimestamp,
+      appUsed: state.evApp,
+      notes: state.evNotes
+    });
+    state.evBundle = bundle;
+    state.evVerifyJsonText = JSON.stringify(bundle, null, 2);
+    state.evVerifyResult = null;
+    render();
+  } catch (err) {
+    state.evError = err.message || 'Unable to generate receipt.';
+    render();
+  }
+}
+
+function downloadReceiptBundle(bundle) {
+  if (!bundle) return;
+  const jsonText = JSON.stringify(bundle, null, 2);
+  const a = document.createElement('a');
+  a.href = `data:application/json;charset=utf-8,${encodeURIComponent(jsonText)}`;
+  const refPart = bundle.receipt?.rrn || 'receipt';
+  a.download = `cybershield-receipt-${refPart.replace(/[^a-zA-Z0-9_-]/g, '')}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+
+function prepareFraudReportFromBundle(bundle) {
+  if (!bundle || !bundle.receipt) return;
+  savePreparedReport(bundle);
+  renderPreparedReportRoot(bundle);
+  if (window.history && typeof window.history.pushState === 'function') {
+    const url = new URL(window.location.href);
+    if (bundle.receipt.amount) url.searchParams.set('reportAmount', bundle.receipt.amount);
+    if (bundle.receipt.rrn) url.searchParams.set('reportRef', bundle.receipt.rrn);
+    url.hash = '#report';
+    window.history.pushState({ ussView: 'report' }, '', url.toString());
+  }
+  const rep = document.getElementById('report');
+  if (rep) rep.scrollIntoView({ behavior: 'smooth' });
+}
+
+async function runReceiptFileVerify() {
+  state.evVerifyResult = await verifyReceiptBundleJson(state.evVerifyJsonText);
+  render();
+}
+
+function renderEvidenceWorkspace(panel) {
+  const box = el('div', 'verify-ev-box');
+  box.appendChild(el('h3', 'verify-qr-inspector-title', t('verify.tab3.ev.heading')));
+  box.appendChild(el('p', 'verify-tab-explainer', t('verify.tab3.ev.sub')));
+
+  const form = el('form', 'verify-form');
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    submitEvidenceReceipt();
+  });
+
+  const grid = el('div', 'verify-input-grid');
+
+  // Amount (required)
+  const amtF = el('div', 'verify-field');
+  const amtL = el('label', 'verify-label', t('verify.tab3.ev.amountLabel'));
+  amtL.setAttribute('for', 'ev-amount');
+  const amtI = el('input', 'verify-input');
+  amtI.id = 'ev-amount';
+  amtI.type = 'number';
+  amtI.step = '0.01';
+  amtI.min = '0.01';
+  amtI.required = true;
+  amtI.value = state.evAmount;
+  amtI.addEventListener('input', (e) => { state.evAmount = e.target.value; });
+  amtF.appendChild(amtL);
+  amtF.appendChild(amtI);
+
+  // Timestamp (required)
+  const tsF = el('div', 'verify-field');
+  const tsL = el('label', 'verify-label', t('verify.tab3.ev.timestampLabel'));
+  tsL.setAttribute('for', 'ev-ts');
+  const tsI = el('input', 'verify-input');
+  tsI.id = 'ev-ts';
+  tsI.type = 'datetime-local';
+  tsI.required = true;
+  tsI.value = state.evTimestamp;
+  tsI.addEventListener('input', (e) => { state.evTimestamp = e.target.value; });
+  tsF.appendChild(tsL);
+  tsF.appendChild(tsI);
+
+  // Transaction status (optional)
+  const stF = el('div', 'verify-field');
+  const stL = el('label', 'verify-label', t('verify.tab3.ev.statusLabel'));
+  stL.setAttribute('for', 'ev-status');
+  const stSel = el('select', 'verify-input');
+  stSel.id = 'ev-status';
+  for (const [val, key] of [['completed', 'statusCompleted'], ['pending', 'statusPending'], ['failed', 'statusFailed']]) {
+    const opt = el('option', '', t(`verify.tab3.ev.${key}`));
+    opt.value = val;
+    if (state.evStatus === val) opt.selected = true;
+    stSel.appendChild(opt);
+  }
+  stSel.addEventListener('change', (e) => { state.evStatus = e.target.value; });
+  stF.appendChild(stL);
+  stF.appendChild(stSel);
+
+  // RRN (optional)
+  const rrnF = el('div', 'verify-field');
+  const rrnL = el('label', 'verify-label', t('verify.tab3.ev.rrnLabel'));
+  rrnL.setAttribute('for', 'ev-rrn');
+  const rrnI = el('input', 'verify-input');
+  rrnI.id = 'ev-rrn';
+  rrnI.type = 'text';
+  rrnI.placeholder = t('verify.tab3.ev.rrnPlaceholder');
+  rrnI.value = state.evRrn;
+  rrnI.addEventListener('input', (e) => { state.evRrn = e.target.value; });
+  rrnF.appendChild(rrnL);
+  rrnF.appendChild(rrnI);
+
+  // Receiver VPA (optional)
+  const vpaF = el('div', 'verify-field');
+  const vpaL = el('label', 'verify-label', t('verify.tab3.ev.vpaLabel'));
+  vpaL.setAttribute('for', 'ev-vpa');
+  const vpaI = el('input', 'verify-input');
+  vpaI.id = 'ev-vpa';
+  vpaI.type = 'text';
+  vpaI.placeholder = t('verify.tab3.ev.vpaPlaceholder');
+  vpaI.value = state.evVpa;
+  vpaI.addEventListener('input', (e) => { state.evVpa = e.target.value; });
+  vpaF.appendChild(vpaL);
+  vpaF.appendChild(vpaI);
+
+  // Receiver name shown (optional)
+  const nmF = el('div', 'verify-field');
+  const nmL = el('label', 'verify-label', t('verify.tab3.ev.nameLabel'));
+  nmL.setAttribute('for', 'ev-name');
+  const nmI = el('input', 'verify-input');
+  nmI.id = 'ev-name';
+  nmI.type = 'text';
+  nmI.placeholder = t('verify.tab3.ev.namePlaceholder');
+  nmI.value = state.evName;
+  nmI.addEventListener('input', (e) => { state.evName = e.target.value; });
+  nmF.appendChild(nmL);
+  nmF.appendChild(nmI);
+
+  // App used (optional)
+  const appF = el('div', 'verify-field');
+  const appL = el('label', 'verify-label', t('verify.tab3.ev.appLabel'));
+  appL.setAttribute('for', 'ev-app');
+  const appI = el('input', 'verify-input');
+  appI.id = 'ev-app';
+  appI.type = 'text';
+  appI.placeholder = t('verify.tab3.ev.appPlaceholder');
+  appI.value = state.evApp;
+  appI.addEventListener('input', (e) => { state.evApp = e.target.value; });
+  appF.appendChild(appL);
+  appF.appendChild(appI);
+
+  // Notes (optional)
+  const ntF = el('div', 'verify-field');
+  const ntL = el('label', 'verify-label', t('verify.tab3.ev.notesLabel'));
+  ntL.setAttribute('for', 'ev-notes');
+  const ntI = el('input', 'verify-input');
+  ntI.id = 'ev-notes';
+  ntI.type = 'text';
+  ntI.placeholder = t('verify.tab3.ev.notesPlaceholder');
+  ntI.value = state.evNotes;
+  ntI.addEventListener('input', (e) => { state.evNotes = e.target.value; });
+  ntF.appendChild(ntL);
+  ntF.appendChild(ntI);
+
+  for (const field of [amtF, tsF, stF, rrnF, vpaF, nmF, appF, ntF]) grid.appendChild(field);
+  form.appendChild(grid);
+
+  const genBtn = el('button', 'learn-btn-primary', t('verify.tab3.ev.generateBtn'));
+  genBtn.type = 'submit';
+  form.appendChild(genBtn);
+  box.appendChild(form);
+
+  if (state.evError) {
+    box.appendChild(el('div', 'verify-error-box', state.evError));
+  }
+
+  if (state.evBundle) {
+    const { receipt, sha256 } = state.evBundle;
+    const rc = el('div', 'verify-ev-receipt-card');
+    rc.id = 'verify-printable-receipt';
+
+    const fGrid = el('div', 'verify-qr-fields-grid');
+    for (const [k, v] of [
+      ['Amount', `Rs.${receipt.amount}`],
+      ['Timestamp', receipt.timestamp],
+      ['Status', receipt.status],
+      ['RRN', receipt.rrn || '—'],
+      ['Receiver VPA', receipt.receiverVpa || '—'],
+      ['Receiver name', receipt.receiverName || '—'],
+      ['App used', receipt.appUsed || '—'],
+      ['Notes', receipt.notes || '—']
+    ]) {
+      const fc = el('div', 'verify-qr-field-card');
+      fc.appendChild(el('span', 'verify-qr-field-lbl', k));
+      fc.appendChild(el('strong', 'verify-qr-field-val', v));
+      fGrid.appendChild(fc);
+    }
+    rc.appendChild(fGrid);
+
+    const hashBox = el('div', 'verify-ev-hash-box');
+    hashBox.appendChild(el('span', 'verify-qr-field-lbl', t('verify.tab3.ev.hashLabel')));
+    hashBox.appendChild(el('code', 'verify-link-code', sha256));
+    rc.appendChild(hashBox);
+
+    const actions = el('div', 'verify-tab3-actions verify-ev-actions');
+    const dlBtn = el('button', 'learn-btn-secondary', t('verify.tab3.ev.downloadBtn'));
+    dlBtn.type = 'button';
+    dlBtn.addEventListener('click', () => downloadReceiptBundle(state.evBundle));
+
+    const printBtn = el('button', 'learn-btn-secondary', t('verify.tab3.ev.printBtn'));
+    printBtn.type = 'button';
+    printBtn.addEventListener('click', () => window.print());
+
+    const prepBtn = el('button', 'learn-btn-primary', t('verify.tab3.ev.prepareReportBtn'));
+    prepBtn.type = 'button';
+    prepBtn.addEventListener('click', () => prepareFraudReportFromBundle(state.evBundle));
+
+    actions.appendChild(dlBtn);
+    actions.appendChild(printBtn);
+    actions.appendChild(prepBtn);
+    rc.appendChild(actions);
+    box.appendChild(rc);
+  }
+
+  // Tamper-evidence verification ("Verify a receipt file")
+  const verifyBox = el('div', 'verify-try-box verify-ev-verify-box');
+  verifyBox.appendChild(el('h4', 'verify-try-title', t('verify.tab3.ev.verifyFileTitle')));
+  verifyBox.appendChild(el('p', 'verify-try-hint', t('verify.tab3.ev.verifyFileSub')));
+
+  const uploadRow = el('div', 'verify-qr-controls');
+  const upLbl = el('label', 'verify-chip verify-file-label', t('verify.tab3.ev.uploadJsonLabel'));
+  const upInp = document.createElement('input');
+  upInp.type = 'file';
+  upInp.accept = '.json,application/json';
+  upInp.className = 'verify-file-input';
+  upInp.addEventListener('change', (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      state.evVerifyJsonText = String(reader.result || '');
+      runReceiptFileVerify();
+    };
+    reader.readAsText(file);
+  });
+  upLbl.appendChild(upInp);
+  uploadRow.appendChild(upLbl);
+  verifyBox.appendChild(uploadRow);
+
+  const ta = document.createElement('textarea');
+  ta.className = 'verify-input verify-ev-json-textarea';
+  ta.rows = 5;
+  ta.placeholder = t('verify.tab3.ev.pasteJsonPlaceholder');
+  ta.value = state.evVerifyJsonText;
+  ta.addEventListener('input', (e) => { state.evVerifyJsonText = e.target.value; });
+  verifyBox.appendChild(ta);
+
+  const chkBtn = el('button', 'learn-btn-secondary', t('verify.tab3.ev.verifyFileBtn'));
+  chkBtn.type = 'button';
+  chkBtn.addEventListener('click', runReceiptFileVerify);
+  verifyBox.appendChild(chkBtn);
+
+  if (state.evVerifyResult) {
+    const res = state.evVerifyResult;
+    const cls = res.status === 'UNCHANGED' ? 'status-verified' : 'status-tampered';
+    const titleKey = res.status === 'UNCHANGED'
+      ? 'unchangedTitle'
+      : res.status === 'MODIFIED'
+        ? 'modifiedTitle'
+        : 'invalidJsonTitle';
+    const card = el('div', `verify-verdict-card verify-ev-verify-card ${cls}`);
+    card.appendChild(el('strong', 'verify-verdict-badge', t(`verify.tab3.ev.${titleKey}`)));
+    card.appendChild(el('p', 'verify-verdict-reason', res.note));
+    if (res.computedHash) {
+      card.appendChild(el('code', 'verify-link-code', `Computed: ${res.computedHash}`));
+    }
+    verifyBox.appendChild(card);
+  }
+  box.appendChild(verifyBox);
+
+  // Honest card
+  const honestCard = el('div', 'verify-honesty-card verify-lab-honesty');
+  honestCard.setAttribute('role', 'note');
+  honestCard.appendChild(el('span', 'verify-honesty-badge', t('verify.tab3.ev.honestBadge')));
+  honestCard.appendChild(el('p', 'verify-honesty-body', t('verify.tab3.ev.honestBody')));
+  box.appendChild(honestCard);
+
+  panel.appendChild(box);
+}
+
 function renderTab3(panel) {
+  panel.appendChild(buildHonestyCard('afterBadge', 'afterTitle', 'afterBody'));
+  renderEvidenceWorkspace(panel);
+  if (!state.merchantsLoaded) return;
   panel.appendChild(el('p', 'verify-tab-explainer', t('verify.tab3.explainer')));
 
   const demoTagRow = el('div', 'verify-demo-row');
@@ -659,64 +1524,57 @@ function render() {
   banner.appendChild(el('strong', '', t('verify.demoBanner')));
   verifyRoot.appendChild(banner);
 
-  // Shell Card with 3 Tabs (or Server Waking Spinner / Needs Server message)
-  const serverStatus = getServerStatus();
-  if (!state.merchantsLoaded && (serverStatus === 'checking' || serverStatus === 'waking')) {
-    const waitCard = el('div', 'learn-card-shell verify-status-box');
-    waitCard.appendChild(el('span', 'uss-spinner', ''));
-    waitCard.appendChild(el('p', 'verify-status-msg', t(serverStatus === 'waking' ? 'health.waking' : 'health.checking')));
-    verifyRoot.appendChild(waitCard);
-  } else if (!state.merchantsLoaded && (serverStatus === 'static' || serverStatus === 'unreachable')) {
-    const offCard = el('div', 'learn-card-shell verify-status-box is-offline');
-    offCard.appendChild(el('p', 'verify-needs-server', t('verify.needsServer')));
-    verifyRoot.appendChild(offCard);
-  } else {
-    const shell = el('div', 'learn-card-shell verify-shell');
+  // Always render the 3-tab Safety Check shell (works both online and offline)
+  const shell = el('div', 'learn-card-shell verify-shell');
 
-    const tabList = el('div', 'verify-tablist');
-    tabList.setAttribute('role', 'tablist');
+  const tabList = el('div', 'verify-tablist');
+  tabList.setAttribute('role', 'tablist');
 
-    const tabDefs = ['t1', 't2', 't3'];
-    for (const key of tabDefs) {
-      const active = state.activeTab === key;
-      const btn = el('button', `verify-tab-btn${active ? ' is-active' : ''}`, t(`verify.tabs.${key}`));
-      btn.type = 'button';
-      btn.setAttribute('role', 'tab');
-      btn.setAttribute('aria-selected', String(active));
-      btn.id = `verify-tab-${key}`;
-      btn.setAttribute('aria-controls', `verify-panel-${key}`);
-      btn.addEventListener('click', () => {
-        state.activeTab = key;
+  const tabDefs = ['t1', 't2', 't3'];
+  for (const key of tabDefs) {
+    const active = state.activeTab === key;
+    const btn = el('button', `verify-tab-btn${active ? ' is-active' : ''}`, t(`verify.tabs.${key}`));
+    btn.type = 'button';
+    btn.setAttribute('role', 'tab');
+    btn.setAttribute('aria-selected', String(active));
+    btn.id = `verify-tab-${key}`;
+    btn.setAttribute('aria-controls', `verify-panel-${key}`);
+    btn.addEventListener('click', () => {
+      if (key !== 't1' && state.camActive) stopCameraScan(false);
+      state.activeTab = key;
+      render();
+    });
+    btn.addEventListener('keydown', (e) => {
+      const idx = tabDefs.indexOf(key);
+      if (e.key === 'ArrowRight') {
+        state.activeTab = tabDefs[(idx + 1) % tabDefs.length];
         render();
-      });
-      btn.addEventListener('keydown', (e) => {
-        const idx = tabDefs.indexOf(key);
-        if (e.key === 'ArrowRight') {
-          state.activeTab = tabDefs[(idx + 1) % tabDefs.length];
-          render();
-          document.getElementById(`verify-tab-${state.activeTab}`)?.focus();
-        } else if (e.key === 'ArrowLeft') {
-          state.activeTab = tabDefs[(idx - 1 + tabDefs.length) % tabDefs.length];
-          render();
-          document.getElementById(`verify-tab-${state.activeTab}`)?.focus();
-        }
-      });
-      tabList.appendChild(btn);
-    }
-    shell.appendChild(tabList);
+        document.getElementById(`verify-tab-${state.activeTab}`)?.focus();
+      } else if (e.key === 'ArrowLeft') {
+        state.activeTab = tabDefs[(idx - 1 + tabDefs.length) % tabDefs.length];
+        render();
+        document.getElementById(`verify-tab-${state.activeTab}`)?.focus();
+      }
+    });
+    tabList.appendChild(btn);
+  }
+  shell.appendChild(tabList);
 
-    const panel = el('div', 'verify-tabpanel');
+  for (const key of tabDefs) {
+    const active = state.activeTab === key;
+    const panel = el('div', `verify-tabpanel${active ? '' : ' hidden'}`);
     panel.setAttribute('role', 'tabpanel');
-    panel.id = `verify-panel-${state.activeTab}`;
-    panel.setAttribute('aria-labelledby', `verify-tab-${state.activeTab}`);
+    panel.id = `verify-panel-${key}`;
+    panel.setAttribute('aria-labelledby', `verify-tab-${key}`);
 
-    if (state.activeTab === 't1') renderTab1(panel);
-    else if (state.activeTab === 't2') renderTab2(panel);
+    if (key === 't1') renderTab1(panel);
+    else if (key === 't2') renderTab2(panel);
     else renderTab3(panel);
 
     shell.appendChild(panel);
-    verifyRoot.appendChild(shell);
   }
+
+  verifyRoot.appendChild(shell);
 
   // "What this can and cannot do" card
   const limitsCard = el('div', 'learn-card-shell verify-limits-card');
@@ -742,19 +1600,18 @@ function render() {
 window.USS = window.USS || {};
 window.USS.verifyGenerateDemo = async (merchantId = 'ravi-stores', amount = 500) => {
   await initI18n();
-  if (!state.merchantsLoaded) await loadMerchants();
   const verifySection = document.getElementById('verify');
   if (verifySection) verifySection.scrollIntoView({ behavior: 'smooth' });
   state.activeTab = 't2';
-  state.selectedMerchantId = merchantId;
-  state.amountInput = String(amount);
-  if (state.merchantsLoaded) {
-    await generateSignedQr();
-  } else {
-    render();
-  }
+  state.labAmount = String(amount);
+  await submitLabOrder();
 };
 window.USS.resetVerifyState = () => {
+  stopLabCountdown();
+  state.labOrder = null;
+  state.labVerifyResult = null;
+  state.labTamperMode = 'clean';
+  state.labRef = generateOrderRef();
   state.trail = [];
   state.tamperedIndex = null;
   state.trailCheckResult = null;
@@ -775,7 +1632,11 @@ onServerStatusChange(async (status) => {
 });
 
 (async () => {
-  await Promise.all([initI18n(), loadMerchants()]);
+  await Promise.all([initI18n(), preloadDemoRegistry()]);
+  renderPreparedReportRoot(loadPreparedReport());
+  if (getServerStatus() === 'ready' && !state.merchantsLoaded) {
+    await loadMerchants();
+  }
   onLangChange(() => render());
   render();
 })();
