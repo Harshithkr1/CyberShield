@@ -318,7 +318,10 @@ function render() {
 
   renderDestinationBox();
 
-  const showInitialChoices = state.status === 'choice' || state.status === 'decode_failed';
+  const showInitialChoices =
+    state.status === 'choice' ||
+    state.status === 'decode_failed' ||
+    state.status === 'analysis_failed';
   setHidden(firstPrompt, !showInitialChoices);
   setHidden(choiceRow, !showInitialChoices);
 
