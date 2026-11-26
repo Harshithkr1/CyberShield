@@ -4834,6 +4834,8 @@ body.uss-simple .learn-rule-text {
 
 .verify-qr-video {
   width: 100%;
+  min-height: 240px;
+  object-fit: cover;
   display: block;
 }
 

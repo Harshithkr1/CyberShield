@@ -337,7 +337,7 @@ async function decodeCanvasPixels(source, width, height, maxDim = 800, boostCont
 
 async function decodeWithRetries(source, w, h) {
   const passes = [
-    [1200, false],
+    [0, false],
     [1000, false],
     [600, false],
     [1000, true]
@@ -438,7 +438,18 @@ function waitForLoadedMetadata(videoEl) {
   });
 }
 
+function isInAppBrowser() {
+  const ua = typeof navigator !== 'undefined' ? (navigator.userAgent || '') : '';
+  return /WhatsApp|Instagram|FBAN|FBAV|Telegram|\bwv\b/i.test(ua);
+}
+
 async function startCameraScan() {
+  if (isInAppBrowser()) {
+    state.camNotice = t('verify.qr.camInAppBrowser');
+    state.camActive = false;
+    render();
+    return;
+  }
   if (!window.isSecureContext) {
     state.camNotice = t('verify.qr.camNeedHttps');
     state.camActive = false;
@@ -454,10 +465,19 @@ async function startCameraScan() {
   state.camNotice = '';
   state.qrError = '';
   try {
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: { ideal: 'environment' } },
-      audio: false
-    });
+    let stream;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: 'environment' } },
+        audio: false
+      });
+    } catch (firstErr) {
+      if (firstErr && (firstErr.name === 'OverconstrainedError' || firstErr.name === 'ConstraintNotSatisfiedError')) {
+        stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+      } else {
+        throw firstErr;
+      }
+    }
     state.camStream = stream;
     state.camActive = true;
     render();
@@ -467,6 +487,8 @@ async function startCameraScan() {
     videoEl.playsInline = true;
     videoEl.setAttribute('playsinline', '');
     videoEl.muted = true;
+    videoEl.setAttribute('muted', '');
+    videoEl.autoplay = true;
     videoEl.srcObject = stream;
     await waitForLoadedMetadata(videoEl);
     await videoEl.play().catch(() => {});
@@ -495,9 +517,9 @@ async function startCameraScan() {
   } catch (err) {
     stopCameraScan(false);
     const name = err && err.name ? err.name : '';
-    if (name === 'NotAllowedError' || name === 'PermissionDeniedError') {
+    if (name === 'NotAllowedError' || name === 'PermissionDeniedError' || name === 'SecurityError') {
       state.camNotice = t('verify.qr.camDenied');
-    } else if (name === 'NotFoundError' || name === 'DevicesNotFoundError') {
+    } else if (name === 'NotFoundError' || name === 'DevicesNotFoundError' || name === 'NotReadableError' || name === 'TrackStartError') {
       state.camNotice = t('verify.qr.camNoDevice');
     } else {
       state.camNotice = t('verify.qr.camUnavailable');
@@ -571,7 +593,7 @@ function renderQrInspector(panel) {
   }
   box.appendChild(demoRow);
 
-  // 2. Camera scan + image upload controls
+  // 2. Camera scan + camera photo + gallery upload controls (all three always visible)
   const actionsRow = el('div', 'verify-qr-controls');
   const camBtn = el('button', 'learn-btn-secondary', t(state.camActive ? 'verify.qr.camStop' : 'verify.qr.camStart'));
   camBtn.type = 'button';
@@ -580,6 +602,20 @@ function renderQrInspector(panel) {
     else startCameraScan();
   });
   actionsRow.appendChild(camBtn);
+
+  const photoLabel = el('label', 'verify-chip verify-file-label', t('verify.qr.takePhotoLabel'));
+  const photoInput = document.createElement('input');
+  photoInput.type = 'file';
+  photoInput.accept = 'image/*';
+  photoInput.setAttribute('capture', 'environment');
+  photoInput.className = 'verify-file-input';
+  photoInput.addEventListener('change', (e) => {
+    const f = e.target.files && e.target.files[0];
+    if (f) decodeQrImageFile(f);
+    e.target.value = '';
+  });
+  photoLabel.appendChild(photoInput);
+  actionsRow.appendChild(photoLabel);
 
   const fileLabel = el('label', 'verify-chip verify-file-label', t('verify.qr.uploadLabel'));
   const fileInput = document.createElement('input');
@@ -605,8 +641,11 @@ function renderQrInspector(panel) {
     const camBox = el('div', 'verify-cam-preview');
     const video = document.createElement('video');
     video.id = 'verify-qr-video';
+    video.playsInline = true;
     video.setAttribute('playsinline', '');
     video.muted = true;
+    video.setAttribute('muted', '');
+    video.autoplay = true;
     video.className = 'verify-qr-video';
     camBox.appendChild(video);
     box.appendChild(camBox);
@@ -1989,6 +2028,11 @@ onServerStatusChange(async (status) => {
     await loadMerchants();
   }
   render();
+});
+
+window.addEventListener('pagehide', () => stopCameraScan(false));
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden && state.camActive) stopCameraScan(true);
 });
 
 (async () => {
