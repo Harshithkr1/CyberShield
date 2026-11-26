@@ -704,11 +704,11 @@ export async function runClientSideAnalysis(text, useMl = true) {
     finalScore = Math.max(finalScore, 85);
   }
 
-  let summary = 'No red flags found. Still verify in your official bank app.';
+  let summary = 'No strong red flags found. Still verify in your bank app.';
   if (isDigitalArrestCombo) {
     summary = 'Critical threat detected: Law enforcement impersonation demanding secrecy and money transfer. Real agencies never arrest over video calls or demand payments.';
   } else if (distinct.length === 0 || level === 'LOW') {
-    summary = 'No red flags found. Still verify in your official bank app.';
+    summary = 'No strong red flags found. Still verify in your bank app.';
   } else if (level === 'CRITICAL') {
     summary = 'Extremely high risk. Multiple severe scam indicators detected. Stop all interaction immediately.';
   } else if (level === 'HIGH') {

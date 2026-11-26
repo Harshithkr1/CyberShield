@@ -1,7 +1,7 @@
 /**
  * go.js – "Check before you go" client-side link gate for go.html.
- * Controls real DOM elements defined in go.html via .hidden class toggles.
- * Never auto-redirects, never logs/stores inspected URLs, never sends URLs to a server.
+ * Two-step gate on first screen: "Check with Cyber Shield" or "Just open the link".
+ * Never auto-redirects, allows only http:/https:, never logs/stores or sends URLs to server.
  */
 
 import { initI18n, t, getLang, setLang, onLangChange } from './i18n.js';
@@ -21,11 +21,13 @@ const $ = (id) => document.getElementById(id);
 
 const state = {
   mode: readMode(),
-  status: 'empty', // 'empty' | 'blocked' | 'analyzing' | 'ready' | 'analysis_failed'
+  status: 'empty', // 'empty' | 'blocked' | 'decode_failed' | 'choice' | 'analyzing' | 'ready' | 'quick_ready' | 'analysis_failed'
+  flow: 'choice', // 'choice' | 'check' | 'just_open'
   url: '',
   parsed: null,
   analysis: null,
   mediumAccepted: false,
+  quickOpenAnyway: false,
   highStep: 0
 };
 
@@ -94,6 +96,32 @@ function goBackAction() {
   window.location.href = './index.html#check';
 }
 
+async function runGateAnalysis(flowMode) {
+  state.flow = flowMode;
+  if (state.status === 'decode_failed' || state.status === 'blocked' || !state.url) {
+    render();
+    return;
+  }
+  state.status = 'analyzing';
+  render();
+
+  const targetSnapshot = state.url;
+  try {
+    const result = await runClientSideAnalysis(targetSnapshot, true);
+    if (state.url !== targetSnapshot) return;
+    if (!result || typeof result.level !== 'string') {
+      throw new Error('Invalid analysis response');
+    }
+    state.analysis = result;
+    state.status = flowMode === 'just_open' ? 'quick_ready' : 'ready';
+  } catch {
+    if (state.url !== targetSnapshot) return;
+    state.analysis = null;
+    state.status = 'analysis_failed';
+  }
+  render();
+}
+
 function bindStaticListeners() {
   $('go-mode-simple')?.addEventListener('click', () => setMode('simple'));
   $('go-mode-challenge')?.addEventListener('click', () => setMode('challenge'));
@@ -102,8 +130,16 @@ function bindStaticListeners() {
   $('go-lang-hi')?.addEventListener('click', () => { Promise.resolve(setLang('hi')).catch(() => {}); });
   $('go-back-btn')?.addEventListener('click', goBackAction);
 
+  $('go-check-btn')?.addEventListener('click', () => runGateAnalysis('check'));
+  $('go-just-open-btn')?.addEventListener('click', () => runGateAnalysis('just_open'));
+
   $('go-demo-risky-btn')?.addEventListener('click', () => {
     window.location.hash = `u=${encodeBase64UrlUtf8(DEMO_RISKY_URL)}`;
+  });
+
+  $('go-open-anyway-btn')?.addEventListener('click', () => {
+    state.quickOpenAnyway = true;
+    render();
   });
 
   $('go-ack-btn')?.addEventListener('click', () => {
@@ -122,10 +158,12 @@ function bindStaticListeners() {
   });
 }
 
-async function inspectCurrentHash() {
+function inspectCurrentHash() {
   state.mediumAccepted = false;
+  state.quickOpenAnyway = false;
   state.highStep = 0;
   state.analysis = null;
+  state.flow = 'choice';
   state.url = '';
   state.parsed = null;
 
@@ -133,7 +171,7 @@ async function inspectCurrentHash() {
   try {
     rawParam = extractFragmentParam(window.location.hash, 'u');
   } catch {
-    state.status = 'blocked';
+    state.status = 'decode_failed';
     render();
     return;
   }
@@ -148,7 +186,7 @@ async function inspectCurrentHash() {
   try {
     decoded = decodeBase64UrlUtf8(rawParam);
   } catch {
-    state.status = 'blocked';
+    state.status = 'decode_failed';
     render();
     return;
   }
@@ -160,25 +198,9 @@ async function inspectCurrentHash() {
     return;
   }
 
-  state.status = 'analyzing';
   state.url = checked.url;
   state.parsed = checked.parsed;
-  render();
-
-  const targetSnapshot = checked.url;
-  try {
-    const result = await runClientSideAnalysis(targetSnapshot, true);
-    if (state.url !== targetSnapshot) return;
-    if (!result || typeof result.level !== 'string') {
-      throw new Error('Invalid analysis response');
-    }
-    state.analysis = result;
-    state.status = 'ready';
-  } catch {
-    if (state.url !== targetSnapshot) return;
-    state.analysis = null;
-    state.status = 'analysis_failed';
-  }
+  state.status = 'choice';
   render();
 }
 
@@ -216,17 +238,19 @@ function renderDestinationBox() {
 
 function renderContinueControls(hasValidHttpUrl, level) {
   const wrap = $('go-continue-wrap');
+  const openAnywayBtn = $('go-open-anyway-btn');
   const ackBtn = $('go-ack-btn');
   const showAnywayBtn = $('go-show-anyway-btn');
   const confirmBox = $('go-confirm-box');
   const continueLink = $('go-continue-link');
 
+  setHidden(openAnywayBtn, true);
   setHidden(ackBtn, true);
   setHidden(showAnywayBtn, true);
   setHidden(confirmBox, true);
   setHidden(continueLink, true);
 
-  if (!hasValidHttpUrl || !state.url) {
+  if (!hasValidHttpUrl || !state.url || state.status === 'choice' || state.status === 'analyzing') {
     setHidden(wrap, true);
     if (continueLink) continueLink.href = './index.html#check';
     return;
@@ -234,6 +258,16 @@ function renderContinueControls(hasValidHttpUrl, level) {
 
   setHidden(wrap, false);
   if (continueLink) continueLink.href = state.url;
+
+  if (state.status === 'quick_ready') {
+    const isDanger = level === 'HIGH' || level === 'CRITICAL';
+    if (!isDanger || state.quickOpenAnyway) {
+      setHidden(continueLink, false);
+    } else {
+      setHidden(openAnywayBtn, false);
+    }
+    return;
+  }
 
   if (state.status === 'ready' && level === 'LOW') {
     setHidden(continueLink, false);
@@ -251,7 +285,7 @@ function renderContinueControls(hasValidHttpUrl, level) {
     return;
   }
 
-  // MEDIUM, analyzing fallback, or analysis_failed: require "I understand the risks" confirm first
+  // MEDIUM or analysis_failed: require "I understand the risks, continue" confirm first
   if (!state.mediumAccepted) {
     setHidden(ackBtn, false);
   } else {
@@ -264,6 +298,8 @@ function render() {
 
   const emptyNote = $('go-empty-note');
   const blockedBox = $('go-blocked-box');
+  const firstPrompt = $('go-first-prompt');
+  const choiceRow = $('go-choice-row');
   const analyzingMsg = $('go-analyzing-msg');
   const verdictBox = $('go-verdict-box');
   const levelBadge = $('go-level-badge');
@@ -282,39 +318,44 @@ function render() {
 
   renderDestinationBox();
 
-  const hasValidUrl = Boolean(
-    state.url &&
-    (state.status === 'analyzing' || state.status === 'ready' || state.status === 'analysis_failed')
-  );
+  const showInitialChoices = state.status === 'choice' || state.status === 'decode_failed';
+  setHidden(firstPrompt, !showInitialChoices);
+  setHidden(choiceRow, !showInitialChoices);
 
-  // Action choices: Go back is always visible; helper links show whenever a valid URL exists
-  const isMediumOrAbove =
+  const hasValidUrl = Boolean(state.url && state.status !== 'blocked' && state.status !== 'decode_failed' && state.status !== 'empty');
+  const levelUpper = String(state.analysis?.level || 'LOW').toUpperCase();
+  const isDangerQuick = state.status === 'quick_ready' && (levelUpper === 'HIGH' || levelUpper === 'CRITICAL');
+
+  const isBackPrimary =
     state.status === 'blocked' ||
+    state.status === 'decode_failed' ||
     state.status === 'analysis_failed' ||
-    (state.status === 'ready' && String(state.analysis?.level || '').toUpperCase() !== 'LOW');
+    state.status === 'empty' ||
+    isDangerQuick ||
+    (state.status === 'ready' && levelUpper !== 'LOW');
 
   if (backBtn) {
-    backBtn.className = isMediumOrAbove || state.status === 'empty' ? 'learn-btn-primary' : 'learn-btn-secondary';
+    backBtn.className = isBackPrimary ? 'learn-btn-primary' : 'learn-btn-secondary';
     setHidden(backBtn, false);
   }
 
+  const showDetailedActions = hasValidUrl && (state.status === 'ready' || state.status === 'analysis_failed');
   if (checkWholeLink) {
     checkWholeLink.href = hasValidUrl
       ? `./index.html#check-u=${encodeBase64UrlUtf8(state.url)}`
       : './index.html#check';
-    setHidden(checkWholeLink, !hasValidUrl);
+    setHidden(checkWholeLink, !showDetailedActions);
   }
 
   if (practiseLink) {
     const scenarioId = mapUrlResultToScenario(state.analysis);
     practiseLink.href = `./index.html?mode=challenge&scam=${encodeURIComponent(scenarioId)}&lang=${encodeURIComponent(getLang())}#learn`;
-    setHidden(practiseLink, !hasValidUrl);
+    setHidden(practiseLink, !showDetailedActions);
   }
 
-  setHidden(reportLink, !hasValidUrl && state.status !== 'blocked');
+  setHidden(reportLink, !showDetailedActions && state.status !== 'blocked');
 
-  // Verdict card for ready or analysis_failed
-  if (state.status === 'analysis_failed') {
+  if (state.status === 'decode_failed' || state.status === 'analysis_failed') {
     if (verdictBox) verdictBox.className = 'pay-demo-verdict verdict-expired go-verdict-box';
     if (levelBadge) {
       levelBadge.className = 'go-level-badge level-medium';
@@ -327,24 +368,44 @@ function render() {
       setHidden(reasonsList, true);
     }
     setHidden(verdictBox, false);
-    renderContinueControls(true, 'MEDIUM');
+    renderContinueControls(state.status === 'analysis_failed', 'MEDIUM');
+    return;
+  }
+
+  if (state.status === 'quick_ready' && state.analysis) {
+    if (isDangerQuick) {
+      if (verdictBox) verdictBox.className = 'pay-demo-verdict verdict-tampered go-verdict-box';
+      if (levelBadge) {
+        levelBadge.className = `go-level-badge level-${levelUpper.toLowerCase()}`;
+        levelBadge.textContent = tOr(`go.levels.${levelUpper}`, `${levelUpper} RISK`);
+      }
+      if (scorePill) scorePill.textContent = '';
+      if (summaryEl) summaryEl.textContent = tOr('go.justOpenDangerMsg', 'This link looks dangerous.');
+      if (reasonsList) {
+        reasonsList.replaceChildren();
+        setHidden(reasonsList, true);
+      }
+      setHidden(verdictBox, false);
+    } else {
+      setHidden(verdictBox, true);
+    }
+    renderContinueControls(true, levelUpper);
     return;
   }
 
   if (state.status === 'ready' && state.analysis) {
     const res = state.analysis;
-    const level = String(res.level || 'LOW').toUpperCase();
-    const isLow = level === 'LOW';
+    const isLow = levelUpper === 'LOW';
     const verdictCls = isLow
       ? 'verdict-valid'
-      : level === 'MEDIUM'
+      : levelUpper === 'MEDIUM'
         ? 'verdict-expired'
         : 'verdict-tampered';
 
     if (verdictBox) verdictBox.className = `pay-demo-verdict ${verdictCls} go-verdict-box`;
     if (levelBadge) {
-      levelBadge.className = `go-level-badge level-${level.toLowerCase()}`;
-      levelBadge.textContent = tOr(`go.levels.${level}`, `${level} RISK`);
+      levelBadge.className = `go-level-badge level-${levelUpper.toLowerCase()}`;
+      levelBadge.textContent = tOr(`go.levels.${levelUpper}`, `${levelUpper} RISK`);
     }
     if (scorePill) {
       scorePill.textContent = tOr('go.scoreText', `Risk score: ${res.score ?? 0}/100`, { score: res.score ?? 0 });
@@ -352,7 +413,7 @@ function render() {
     if (summaryEl) {
       summaryEl.textContent = isLow
         ? tOr('go.lowSummary', 'No strong red flags found. Still be careful.')
-        : tOr(`go.riskSummary.${level}`, res.summary || '');
+        : tOr(`go.riskSummary.${levelUpper}`, res.summary || '');
     }
 
     if (reasonsList) {
@@ -379,12 +440,12 @@ function render() {
     }
 
     setHidden(verdictBox, false);
-    renderContinueControls(true, level);
+    renderContinueControls(true, levelUpper);
     return;
   }
 
   setHidden(verdictBox, true);
-  renderContinueControls(hasValidUrl, 'MEDIUM');
+  renderContinueControls(false, 'LOW');
 }
 
 bindStaticListeners();
@@ -392,12 +453,12 @@ window.addEventListener('hashchange', inspectCurrentHash);
 
 (async () => {
   applyModeClass();
-  render();
+  inspectCurrentHash();
   try {
     await initI18n();
   } catch {
     // Keep built-in fallback copy rendered if dictionary fetch fails
   }
   onLangChange(() => render());
-  await inspectCurrentHash();
+  render();
 })();

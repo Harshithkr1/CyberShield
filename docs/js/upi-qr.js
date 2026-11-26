@@ -63,7 +63,9 @@ export function parseUpiUri(rawInput) {
     am: params.am || '',
     tn: params.tn || '',
     tr: params.tr || '',
-    cu: params.cu || ''
+    cu: params.cu || '',
+    mc: params.mc || '',
+    mode: params.mode || ''
   };
 }
 

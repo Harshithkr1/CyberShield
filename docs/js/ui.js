@@ -131,7 +131,7 @@ export function showResult(result, originalText = '') {
   // 3. Risk badge with text label & icon, plus scam type label
   renderRiskBadge(level);
 
-  const lowMsg = tOr('check.noStrongFlags', 'No red flags found. Still verify in your official bank app.');
+  const lowMsg = tOr('check.noStrongFlags', 'No strong red flags found. Still verify in your bank app.');
 
   if (scamType) {
     scamType.textContent = type && type !== 'SAFE' && type !== 'NONE'
@@ -465,7 +465,7 @@ function renderSignalsList(signals) {
     emptyNotice.className = 'signals-empty-card';
     const msg = document.createElement('p');
     msg.className = 'signal-explanation';
-    msg.textContent = tOr('check.noStrongFlags', 'No red flags found. Still verify in your official bank app.');
+    msg.textContent = tOr('check.noStrongFlags', 'No strong red flags found. Still verify in your bank app.');
     emptyNotice.appendChild(msg);
     signalsList.appendChild(emptyNotice);
     signalsSection.classList.remove('hidden');
@@ -787,7 +787,7 @@ function getActionSteps(level, scamType) {
     case 'LOW':
     default:
       return [
-        tOr('check.noStrongFlags', 'No red flags found. Still verify in your official bank app.'),
+        tOr('check.noStrongFlags', 'No strong red flags found. Still verify in your bank app.'),
         'Never share passwords, banking PINs, or OTPs with anyone.',
         'Always check the sender’s full address and verify links before clicking.'
       ];
@@ -829,7 +829,7 @@ function prepareCopyReport(result, originalText) {
 
   lines.push(`Why this score (${signals.length} indicators):`);
   if (signals.length === 0) {
-    lines.push(`• ${tOr('check.noStrongFlags', 'No red flags found. Still verify in your official bank app.')}`);
+    lines.push(`• ${tOr('check.noStrongFlags', 'No strong red flags found. Still verify in your bank app.')}`);
   } else {
     signals.forEach((s) => {
       lines.push(`• [${s.category ?? 'SIGNAL'}] (+${s.points ?? 0} pts) ${s.explanation ?? ''}`);

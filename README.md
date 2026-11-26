@@ -195,11 +195,13 @@ java -jar target/cybershield-0.0.1-SNAPSHOT.jar
 ```
 
 ### Environment Variables
-| Variable | Default | Purpose |
+| Variable | Default | Purpose / If Missing |
 | :--- | :--- | :--- |
 | `PORT` | `8080` | HTTP port bound by Spring Boot (`server.port=${PORT:8080}`). |
-| `SIGNING_SECRET` | *(32 random bytes at startup)* | HMAC-SHA256 key for signing Verify QR tokens and chained receipts. Never logged or hard-coded. |
-| `PUBLIC_BASE_URL` | *(derived from request host)* | Base URL used when generating signed `/pay-demo.html?p=...&s=...` links & QR codes (e.g. `http://192.168.1.42:8080` or `https://your-app.onrender.com`). |
+| `SIGNING_SECRET` | *(32 random bytes at startup)* | HMAC-SHA256 key for `/api/verify/*` DemoPay QR links and chained receipts. If missing, an ephemeral key is generated on startup (links signed before restart fail verification after restart). |
+| `PUBLIC_BASE_URL` | *(derived from `X-Forwarded-Host` / `Host` header)* | Base URL used when generating signed `/pay-demo.html?p=...&s=...` links & QR codes (e.g. `http://192.168.1.42:8080` or `https://your-app.onrender.com`). If missing, inferred from the incoming request host. |
+| `UPI_SIGNING_SECRET` | *(32 random bytes at startup)* | HMAC-SHA256 key for `/api/pay/order` and `/api/pay/verify` in Tamper Lab. If missing, an ephemeral key is generated with a `DEV ONLY` warning (resets on Render restarts). |
+| `CORS_ALLOWED_ORIGIN` | *(empty — same-origin only)* | Comma-separated origins allowed for `/api/pay/**` CORS requests (e.g. a deployed static GitHub Pages origin). If missing, cross-origin `/api/pay/**` requests are blocked by browser CORS policy. |
 
 ---
 
@@ -339,7 +341,7 @@ All heuristic data, keywords, thresholds, and weights live in [`src/main/resourc
 
 ## Running Tests
 
-Execute the full suite of **188 JUnit tests** covering detectors, scoring math, Check/Verify endpoints, ML parity, scenario/i18n validation, robustness, and security headers:
+Execute the full suite of **196 JUnit tests** covering detectors, scoring math, Check/Verify/Pay endpoints, ML parity, scenario/i18n validation, robustness, and security headers:
 
 ```bash
 # Run all tests

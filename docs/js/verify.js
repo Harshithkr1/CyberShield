@@ -11,6 +11,7 @@ import { getServerStatus, onServerStatusChange } from './health.js';
 import { parseUpiUri, analyzeUpiFields, preloadDemoRegistry, lookupDemoRegistry } from './upi-qr.js';
 import { generateOrderRef, createPayOrder, buildTamperedToken, verifyPayOrderToken } from './pay-tamper-lab.js';
 import { createReceiptBundle, verifyReceiptBundleJson, savePreparedReport, loadPreparedReport, renderPreparedReportRoot } from './receipt-evidence.js';
+import { buildProtectedLink, validateDestinationUrl } from './go-utils.js';
 
 const TRAIL_STORAGE_KEY = 'uss.trail';
 const verifyRoot = document.getElementById('verify-root');
@@ -24,11 +25,14 @@ const state = {
   qrExpectedAmount: '',
   qrError: '',
   qrResult: null,
+  qrWebLink: '',
+  qrPlainText: '',
   qrRegistryResult: null,
   camActive: false,
   camNotice: '',
   camStream: null,
   camRaf: null,
+  camTimer: null,
   upiInput: '',
   nameInput: '',
   tab1Loading: false,
@@ -39,6 +43,7 @@ const state = {
   amountInput: '500',
   tab2Loading: false,
   tab2Error: '',
+  tab2Copied: false,
   qrData: null,
   tamperAmountInput: '5000',
   tamperCheckLoading: false,
@@ -199,6 +204,10 @@ function buildHonestyCard(badgeKey, titleKey, bodyKey) {
 }
 
 function stopCameraScan(shouldRender = false) {
+  if (state.camTimer) {
+    clearTimeout(state.camTimer);
+    state.camTimer = null;
+  }
   if (state.camRaf) {
     cancelAnimationFrame(state.camRaf);
     state.camRaf = null;
@@ -214,33 +223,110 @@ function stopCameraScan(shouldRender = false) {
 function inspectUpiText(rawText) {
   const input = (rawText !== undefined ? String(rawText) : state.qrUriInput).trim();
   state.qrUriInput = input;
+  state.qrWebLink = '';
+  state.qrPlainText = '';
+
   const parsed = parseUpiUri(input);
-  if (!parsed) {
-    state.qrError = t('verify.qr.invalidUri');
-    state.qrResult = null;
-    state.qrRegistryResult = null;
+  if (parsed) {
+    state.qrError = '';
+    state.qrResult = analyzeUpiFields(parsed, state.qrExpectedAmount);
+    state.qrRegistryResult = lookupDemoRegistry(parsed);
     render();
     return;
   }
-  state.qrError = '';
-  state.qrResult = analyzeUpiFields(parsed, state.qrExpectedAmount);
-  state.qrRegistryResult = lookupDemoRegistry(parsed);
+
+  const webCheck = validateDestinationUrl(input);
+  if (webCheck.valid) {
+    state.qrError = '';
+    state.qrResult = null;
+    state.qrRegistryResult = null;
+    state.qrWebLink = webCheck.url;
+    render();
+    return;
+  }
+
+  if (input && rawText !== undefined) {
+    state.qrError = '';
+    state.qrResult = null;
+    state.qrRegistryResult = null;
+    state.qrPlainText = input;
+    render();
+    return;
+  }
+
+  state.qrError = t('verify.qr.invalidUri');
+  state.qrResult = null;
+  state.qrRegistryResult = null;
   render();
 }
 
-function decodeCanvasPixels(source, width, height) {
+let cachedBarcodeDetector = null;
+let barcodeDetectorChecked = false;
+
+function getQrBarcodeDetector() {
+  if (barcodeDetectorChecked) return cachedBarcodeDetector;
+  barcodeDetectorChecked = true;
+  if (typeof window !== 'undefined' && 'BarcodeDetector' in window) {
+    try {
+      cachedBarcodeDetector = new window.BarcodeDetector({ formats: ['qr_code'] });
+    } catch {
+      cachedBarcodeDetector = null;
+    }
+  }
+  return cachedBarcodeDetector;
+}
+
+function drawScaledSource(source, srcW, srcH, maxDim, boostContrast = false) {
+  const scale = maxDim && Math.max(srcW, srcH) > maxDim
+    ? maxDim / Math.max(srcW, srcH)
+    : 1;
+  const w = Math.max(1, Math.round(srcW * scale));
+  const h = Math.max(1, Math.round(srcH * scale));
+  const canvas = document.createElement('canvas');
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+  ctx.drawImage(source, 0, 0, w, h);
+
+  if (boostContrast) {
+    const imgData = ctx.getImageData(0, 0, w, h);
+    const d = imgData.data;
+    for (let i = 0; i < d.length; i += 4) {
+      const lum = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
+      const v = lum < 128 ? Math.max(0, lum * 0.5) : Math.min(255, 128 + (lum - 128) * 1.6);
+      d[i] = v;
+      d[i + 1] = v;
+      d[i + 2] = v;
+    }
+    ctx.putImageData(imgData, 0, 0);
+  }
+  return { canvas, ctx, w, h };
+}
+
+async function decodeCanvasPixels(source, width, height, maxDim = 800, boostContrast = false) {
+  if (!width || !height) return false;
+  const { canvas, ctx, w, h } = drawScaledSource(source, width, height, maxDim, boostContrast);
+
+  const detector = getQrBarcodeDetector();
+  if (detector) {
+    try {
+      const codes = await detector.detect(canvas);
+      const hit = Array.isArray(codes) ? codes.find((c) => c && c.rawValue) : null;
+      if (hit && hit.rawValue) {
+        stopCameraScan(false);
+        inspectUpiText(hit.rawValue);
+        return true;
+      }
+    } catch {
+      // Fall back cleanly to local jsQR
+    }
+  }
+
   if (typeof window.jsQR !== 'function') {
-    state.qrError = t('verify.qr.noQrFound');
-    render();
     return false;
   }
-  const canvas = document.createElement('canvas');
-  canvas.width = width;
-  canvas.height = height;
-  const ctx = canvas.getContext('2d', { willReadFrequently: true });
-  ctx.drawImage(source, 0, 0, width, height);
-  const imgData = ctx.getImageData(0, 0, width, height);
-  const decoded = window.jsQR(imgData.data, width, height, { inversionAttempts: 'attemptBoth' });
+  const imgData = ctx.getImageData(0, 0, w, h);
+  const decoded = window.jsQR(imgData.data, w, h, { inversionAttempts: 'attemptBoth' });
   if (decoded && decoded.data) {
     stopCameraScan(false);
     inspectUpiText(decoded.data);
@@ -249,27 +335,71 @@ function decodeCanvasPixels(source, width, height) {
   return false;
 }
 
-function decodeQrImageFile(file) {
+async function decodeWithRetries(source, w, h) {
+  const passes = [
+    [1200, false],
+    [1000, false],
+    [600, false],
+    [1000, true]
+  ];
+  for (const [maxDim, boost] of passes) {
+    if (await decodeCanvasPixels(source, w, h, maxDim, boost)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+async function decodeQrImageFile(file) {
   if (!file) return;
-  const reader = new FileReader();
-  reader.onload = () => {
-    const img = new Image();
-    img.onload = () => {
-      const ok = decodeCanvasPixels(img, img.naturalWidth || img.width, img.naturalHeight || img.height);
-      if (!ok) {
+  if (typeof createImageBitmap === 'function') {
+    let bitmap = null;
+    try {
+      bitmap = await createImageBitmap(file);
+      const ok = await decodeWithRetries(bitmap, bitmap.width, bitmap.height);
+      if (ok) return;
+    } catch {
+      // Fall through to FileReader fallback or error message
+    } finally {
+      if (bitmap && typeof bitmap.close === 'function') bitmap.close();
+    }
+  }
+
+  await new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = async () => {
+        const ok = await decodeWithRetries(img, img.naturalWidth || img.width, img.naturalHeight || img.height);
+        if (!ok) {
+          state.qrError = t('verify.qr.noQrFound');
+          state.qrResult = null;
+          state.qrWebLink = '';
+          state.qrPlainText = '';
+          render();
+        }
+        resolve();
+      };
+      img.onerror = () => {
         state.qrError = t('verify.qr.noQrFound');
         state.qrResult = null;
+        state.qrWebLink = '';
+        state.qrPlainText = '';
         render();
-      }
+        resolve();
+      };
+      img.src = String(reader.result || '');
     };
-    img.onerror = () => {
+    reader.onerror = () => {
       state.qrError = t('verify.qr.noQrFound');
       state.qrResult = null;
+      state.qrWebLink = '';
+      state.qrPlainText = '';
       render();
+      resolve();
     };
-    img.src = String(reader.result || '');
-  };
-  reader.readAsDataURL(file);
+    reader.readAsDataURL(file);
+  });
 }
 
 async function decodeSampleQrImg(imgEl) {
@@ -280,7 +410,7 @@ async function decodeSampleQrImg(imgEl) {
     }
     const w = imgEl.naturalWidth || imgEl.width;
     const h = imgEl.naturalHeight || imgEl.height;
-    if (!w || !h || !decodeCanvasPixels(imgEl, w, h)) {
+    if (!w || !h || !(await decodeCanvasPixels(imgEl, w, h, 800, false))) {
       state.qrError = t('verify.qr.noQrFound');
       state.qrResult = null;
       render();
@@ -292,7 +422,28 @@ async function decodeSampleQrImg(imgEl) {
   }
 }
 
+function waitForLoadedMetadata(videoEl) {
+  if (videoEl.readyState >= 1 && videoEl.videoWidth > 0) return Promise.resolve();
+  return new Promise((resolve) => {
+    let done = false;
+    const finish = () => {
+      if (done) return;
+      done = true;
+      videoEl.removeEventListener('loadedmetadata', finish);
+      resolve();
+    };
+    videoEl.addEventListener('loadedmetadata', finish, { once: true });
+    setTimeout(finish, 2000);
+  });
+}
+
 async function startCameraScan() {
+  if (!window.isSecureContext) {
+    state.camNotice = t('verify.qr.camNeedHttps');
+    state.camActive = false;
+    render();
+    return;
+  }
   if (!navigator.mediaDevices || typeof navigator.mediaDevices.getUserMedia !== 'function') {
     state.camNotice = t('verify.qr.camUnavailable');
     state.camActive = false;
@@ -303,7 +454,7 @@ async function startCameraScan() {
   state.qrError = '';
   try {
     const stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: 'environment' },
+      video: { facingMode: { ideal: 'environment' } },
       audio: false
     });
     state.camStream = stream;
@@ -312,22 +463,44 @@ async function startCameraScan() {
 
     const videoEl = document.getElementById('verify-qr-video');
     if (!videoEl) return;
+    videoEl.playsInline = true;
+    videoEl.setAttribute('playsinline', '');
+    videoEl.muted = true;
     videoEl.srcObject = stream;
+    await waitForLoadedMetadata(videoEl);
     await videoEl.play().catch(() => {});
 
-    const scanFrame = () => {
+    let decodingFrame = false;
+    const scanTick = async () => {
       if (!state.camActive || !state.camStream) return;
-      if (videoEl.readyState >= 2 && videoEl.videoWidth > 0 && videoEl.videoHeight > 0) {
-        if (decodeCanvasPixels(videoEl, videoEl.videoWidth, videoEl.videoHeight)) {
-          return;
+      if (!decodingFrame && videoEl.readyState >= 2 && videoEl.videoWidth > 0 && videoEl.videoHeight > 0) {
+        decodingFrame = true;
+        try {
+          const hit = await decodeCanvasPixels(videoEl, videoEl.videoWidth, videoEl.videoHeight, 800, false);
+          if (hit) return;
+        } finally {
+          decodingFrame = false;
         }
       }
-      state.camRaf = requestAnimationFrame(scanFrame);
+      if (state.camActive) {
+        state.camTimer = setTimeout(() => {
+          state.camRaf = requestAnimationFrame(scanTick);
+        }, 100);
+      }
     };
-    state.camRaf = requestAnimationFrame(scanFrame);
-  } catch {
+    state.camTimer = setTimeout(() => {
+      state.camRaf = requestAnimationFrame(scanTick);
+    }, 100);
+  } catch (err) {
     stopCameraScan(false);
-    state.camNotice = t('verify.qr.camUnavailable');
+    const name = err && err.name ? err.name : '';
+    if (name === 'NotAllowedError' || name === 'PermissionDeniedError') {
+      state.camNotice = t('verify.qr.camDenied');
+    } else if (name === 'NotFoundError' || name === 'DevicesNotFoundError') {
+      state.camNotice = t('verify.qr.camNoDevice');
+    } else {
+      state.camNotice = t('verify.qr.camUnavailable');
+    }
     render();
   }
 }
@@ -411,6 +584,7 @@ function renderQrInspector(panel) {
   fileInput.addEventListener('change', (e) => {
     const f = e.target.files && e.target.files[0];
     if (f) decodeQrImageFile(f);
+    e.target.value = '';
   });
   fileLabel.appendChild(fileInput);
   actionsRow.appendChild(fileLabel);
@@ -489,6 +663,21 @@ function renderQrInspector(panel) {
     box.appendChild(el('div', 'verify-error-box', state.qrError));
   }
 
+  if (state.qrWebLink) {
+    const webBox = el('div', 'verify-qr-output');
+    webBox.appendChild(el('h4', 'verify-qr-subhead', t('verify.qr.webLinkTitle')));
+    webBox.appendChild(el('p', 'verify-qr-plain-text', state.qrWebLink));
+    const linkBtn = el('a', 'learn-btn-primary go-btn-link', t('verify.qr.checkWebLinkBtn'));
+    linkBtn.href = buildProtectedLink(state.qrWebLink);
+    webBox.appendChild(linkBtn);
+    box.appendChild(webBox);
+  } else if (state.qrPlainText) {
+    const plainBox = el('div', 'verify-qr-output');
+    plainBox.appendChild(el('h4', 'verify-qr-subhead', t('verify.qr.plainTextTitle')));
+    plainBox.appendChild(el('p', 'verify-qr-plain-text', state.qrPlainText));
+    box.appendChild(plainBox);
+  }
+
   if (state.qrResult) {
     const { parsed, flags, cleanMessage, guidance } = state.qrResult;
     const out = el('div', 'verify-qr-output');
@@ -499,9 +688,11 @@ function renderQrInspector(panel) {
       ['fieldPa', parsed.pa],
       ['fieldPn', parsed.pn],
       ['fieldAm', parsed.am ? `${parsed.cu || 'INR'} ${parsed.am}` : ''],
+      ['fieldCu', parsed.cu],
       ['fieldTn', parsed.tn],
       ['fieldTr', parsed.tr],
-      ['fieldCu', parsed.cu]
+      ['fieldMc', parsed.mc],
+      ['fieldMode', parsed.mode]
     ];
     for (const [lblKey, val] of fieldSpecs) {
       const fCard = el('div', `verify-qr-field-card${!val ? ' is-blank' : ''}`);
@@ -999,6 +1190,154 @@ function renderTab2(panel) {
   panel.appendChild(prodCard);
 
   if (!state.merchantsLoaded) return;
+
+  // Classic DemoPay Signed QR + Copy link + Tamper amount check (server-connected)
+  const demoBox = el('div', 'verify-tamper-lab verify-demopay-box');
+  demoBox.appendChild(el('p', 'verify-tab-explainer', t('verify.tab2.explainer')));
+
+  const demoForm = el('form', 'verify-form');
+  demoForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    generateSignedQr();
+  });
+
+  const demoGrid = el('div', 'verify-input-grid');
+  const mField = el('div', 'verify-field');
+  const mLbl = el('label', 'verify-label', t('verify.tab2.merchantLabel'));
+  mLbl.setAttribute('for', 'verify-merchant-select');
+  const mSel = el('select', 'verify-input verify-select');
+  mSel.id = 'verify-merchant-select';
+  for (const m of state.merchants) {
+    const opt = el('option', '', `${m.name} (${m.upiId})`);
+    opt.value = m.id;
+    opt.selected = m.id === state.selectedMerchantId;
+    mSel.appendChild(opt);
+  }
+  mSel.addEventListener('change', (e) => { state.selectedMerchantId = e.target.value; });
+  mField.appendChild(mLbl);
+  mField.appendChild(mSel);
+
+  const aField = el('div', 'verify-field');
+  const aLbl = el('label', 'verify-label', t('verify.tab2.amountLabel'));
+  aLbl.setAttribute('for', 'verify-amount-input');
+  const aInp = el('input', 'verify-input');
+  aInp.id = 'verify-amount-input';
+  aInp.type = 'number';
+  aInp.step = '0.01';
+  aInp.min = '0.01';
+  aInp.max = '100000';
+  aInp.value = state.amountInput;
+  aInp.addEventListener('input', (e) => { state.amountInput = e.target.value; });
+  aField.appendChild(aLbl);
+  aField.appendChild(aInp);
+
+  demoGrid.appendChild(mField);
+  demoGrid.appendChild(aField);
+  demoForm.appendChild(demoGrid);
+
+  const genBtn = el('button', 'learn-btn-primary', t('verify.tab2.generateBtn'));
+  genBtn.type = 'submit';
+  genBtn.disabled = state.tab2Loading;
+  demoForm.appendChild(genBtn);
+  demoBox.appendChild(demoForm);
+
+  if (state.tab2Error) {
+    demoBox.appendChild(el('div', 'verify-error-box', state.tab2Error));
+  }
+
+  if (state.qrData) {
+    const qr = state.qrData;
+    const resolvedLink = resolvePaymentLinkOrigin(qr.paymentLink);
+
+    const qrRes = el('div', 'verify-qr-result');
+    const qrVis = el('div', 'verify-qr-visual');
+    const qrImg = document.createElement('img');
+    qrImg.className = 'verify-qr-img';
+    qrImg.src = qr.qrDataUri;
+    qrImg.alt = 'DemoPay signed QR';
+    qrImg.width = 210;
+    qrImg.height = 210;
+    qrVis.appendChild(qrImg);
+
+    const qrInfo = el('div', 'verify-qr-info');
+    qrInfo.appendChild(el('p', 'verify-seal-line', t('verify.tab2.sealLine')));
+    qrInfo.appendChild(el('span', 'verify-qr-field-lbl', t('verify.tab2.linkLabel')));
+    qrInfo.appendChild(el('code', 'verify-link-code', resolvedLink));
+
+    const qrActRow = el('div', 'verify-tab3-actions');
+    const copyLinkBtn = el('button', 'verify-chip', state.tab2Copied ? t('verify.tab2.copied') : t('verify.tab2.copyBtn'));
+    copyLinkBtn.type = 'button';
+    copyLinkBtn.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(resolvedLink);
+        state.tab2Copied = true;
+        render();
+        setTimeout(() => { state.tab2Copied = false; render(); }, 1800);
+      } catch {
+        // ignore clipboard unavailability
+      }
+    });
+    qrActRow.appendChild(copyLinkBtn);
+
+    const custLink = el('a', 'learn-btn-secondary verify-open-customer', t('verify.tab2.openCustomerBtn'));
+    custLink.href = resolvedLink;
+    custLink.target = '_blank';
+    custLink.rel = 'noopener noreferrer';
+    qrActRow.appendChild(custLink);
+    qrInfo.appendChild(qrActRow);
+
+    qrRes.appendChild(qrVis);
+    qrRes.appendChild(qrInfo);
+    demoBox.appendChild(qrRes);
+
+    // Tamper amount check box
+    const tryBox = el('div', 'verify-try-box');
+    tryBox.appendChild(el('h4', 'verify-try-title', t('verify.tab2.tryTitle')));
+    tryBox.appendChild(el('p', 'verify-try-hint', t('verify.tab2.tryHint')));
+
+    const tryRow = el('div', 'verify-try-row');
+    const editWrap = el('div', 'verify-field');
+    const editLbl = el('label', 'verify-label', t('verify.tab2.editAmountLabel'));
+    editLbl.setAttribute('for', 'verify-tamper-amt');
+    const editInp = el('input', 'verify-input');
+    editInp.id = 'verify-tamper-amt';
+    editInp.type = 'number';
+    editInp.step = '0.01';
+    editInp.min = '0.01';
+    editInp.value = state.tamperAmountInput;
+    editInp.addEventListener('input', (e) => { state.tamperAmountInput = e.target.value; });
+    editWrap.appendChild(editLbl);
+    editWrap.appendChild(editInp);
+
+    const chkBtn = el('button', 'learn-btn-primary', t('verify.tab2.checkBtn'));
+    chkBtn.type = 'button';
+    chkBtn.disabled = state.tamperCheckLoading;
+    chkBtn.addEventListener('click', runTamperCheck);
+    tryRow.appendChild(editWrap);
+    tryRow.appendChild(chkBtn);
+    tryBox.appendChild(tryRow);
+
+    if (state.tamperCheckResult) {
+      const tcr = state.tamperCheckResult;
+      const cr = tcr.checkResult || {};
+      const st = String(cr.status || 'MALFORMED').toUpperCase();
+      const cls = st === 'VALID' ? 'status-valid' : st === 'EXPIRED' ? 'status-lookalike' : 'status-tampered';
+      const vCard = el('div', `verify-verdict-card ${cls}`);
+      vCard.appendChild(el('strong', 'verify-verdict-badge', st));
+      const msgKey = st === 'VALID' ? 'statusValid' : st === 'EXPIRED' ? 'statusExpired' : st === 'TAMPERED' ? 'statusTampered' : 'statusMalformed';
+      vCard.appendChild(el('p', 'verify-verdict-reason', t(`verify.tab2.${msgKey}`)));
+
+      const cmp = el('div', 'verify-amount-compare');
+      cmp.appendChild(el('span', 'verify-cmp-orig', `${t('verify.tab2.originalLabel')}: ${tcr.originalRupees}`));
+      cmp.appendChild(el('span', 'verify-cmp-recv', `${t('verify.tab2.receivedLabel')}: ${tcr.receivedRupees}`));
+      vCard.appendChild(cmp);
+      tryBox.appendChild(vCard);
+    }
+
+    demoBox.appendChild(tryBox);
+  }
+
+  panel.appendChild(demoBox);
 }
 
 // ── Tab 3: After payment (Hash-Chained Receipt Trail) ─────────────────────
@@ -1576,14 +1915,34 @@ function render() {
 
 // ── Boot & Global Presenter / Reset Hooks ─────────────────────────────────
 
+function resolvePaymentLinkOrigin(rawLink) {
+  try {
+    const u = new URL(rawLink, window.location.origin);
+    const isPageLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const isLinkLocal = u.hostname === 'localhost' || u.hostname === '127.0.0.1';
+    if ((!isPageLocal && isLinkLocal) || (u.host === window.location.host && u.protocol !== window.location.protocol)) {
+      return `${window.location.origin}${u.pathname}${u.search}${u.hash}`;
+    }
+    return u.href;
+  } catch {
+    return rawLink;
+  }
+}
+
 window.USS = window.USS || {};
 window.USS.verifyGenerateDemo = async (merchantId = 'ravi-stores', amount = 500) => {
   await initI18n();
   const verifySection = document.getElementById('verify');
   if (verifySection) verifySection.scrollIntoView({ behavior: 'smooth' });
   state.activeTab = 't2';
+  state.selectedMerchantId = merchantId;
+  state.amountInput = String(amount);
   state.labAmount = String(amount);
-  await submitLabOrder();
+  if (state.merchantsLoaded) {
+    await Promise.all([submitLabOrder(), generateSignedQr()]);
+  } else {
+    await submitLabOrder();
+  }
 };
 window.USS.resetVerifyState = () => {
   stopLabCountdown();
